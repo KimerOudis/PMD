@@ -73,6 +73,7 @@ const btnClearAbilita = document.getElementById('btn-clear-abilita');
 
 const sbSprite = document.getElementById('sb-sprite');
 const sbSpritePlaceholder = document.getElementById('sb-sprite-placeholder');
+const btnSalvaSoloSprite = document.getElementById('btn-salva-solo-sprite');
 const sbNome = document.getElementById('sb-nome');
 const sbTipi = document.getElementById('sb-tipi');
 const sbLivello = document.getElementById('sb-livello');
@@ -106,7 +107,7 @@ function pulisciNomePuro(nome) {
     return nome ? nome.toString().toLowerCase().replace(/[^a-z0-9]/g, '') : '';
 }
 
-// Inizializzazione pagina all'avvio
+// Inizializzazione pagina
 window.addEventListener('DOMContentLoaded', () => {
     if (inputPkmSearch) inputPkmSearch.value = "";
     pokemonSelezionatoData = null;
@@ -122,38 +123,46 @@ window.addEventListener('DOMContentLoaded', () => {
         listaAbilitaElem.innerHTML = '<li style="padding: 10px; color: #64748b; font-style: italic;">Seleziona prima un Pokémon</li>';
     }
 
+    caricaDBMosse();
+    caricaDBAbilita();
+    popolaDatalistPokedex();
     caricaCronologiaDaStorage();
 });
 
 // 1. Carica DB Mosse
-if (typeof datiCSV !== 'undefined') {
-    Papa.parse(datiCSV, {
-        header: true,
-        skipEmptyLines: true,
-        complete: function(results) {
-            listaMosseDB = results.data.filter(riga => riga['[Name]'] && riga['[Name]'] !== '[Name]');
-        }
-    });
+function caricaDBMosse() {
+    if (typeof datiCSV !== 'undefined') {
+        Papa.parse(datiCSV, {
+            header: true,
+            skipEmptyLines: true,
+            complete: function(results) {
+                listaMosseDB = results.data.filter(riga => riga['[Name]'] && riga['[Name]'] !== '[Name]');
+            }
+        });
+    }
 }
 
 // 2. Carica DB Abilità
-if (typeof datiAbilitiesCSV !== 'undefined') {
-    Papa.parse(datiAbilitiesCSV, {
-        header: true,
-        skipEmptyLines: true,
-        complete: function(results) {
-            listaAbilitaGeneriche = results.data.filter(riga => {
-                const name = riga['[Name]'];
-                return name && name !== '[Name]' && !name.startsWith('[');
-            });
-            popolaListaAbilitaVisibili();
-        }
-    });
+function caricaDBAbilita() {
+    if (typeof datiAbilitiesCSV !== 'undefined') {
+        Papa.parse(datiAbilitiesCSV, {
+            header: true,
+            skipEmptyLines: true,
+            complete: function(results) {
+                listaAbilitaGeneriche = results.data.filter(riga => {
+                    const name = riga['[Name]'];
+                    return name && name !== '[Name]' && !name.startsWith('[');
+                });
+                popolaListaAbilitaVisibili();
+            }
+        });
+    }
 }
 
 // 3. Popola Autocomplete Pokémon
 function popolaDatalistPokedex() {
     const pokedexObj = (typeof exports !== 'undefined' && exports.BattlePokedex) ? exports.BattlePokedex : {};
+    if (!listPokedex) return;
     listPokedex.innerHTML = '';
 
     Object.keys(pokedexObj).forEach(key => {
@@ -163,18 +172,11 @@ function popolaDatalistPokedex() {
         listPokedex.appendChild(option);
     });
 }
-popolaDatalistPokedex();
 
-// --- CALCOLO TAGLIA IN BASE AI METRI (CONVERSIONE DA FEET) ---
+// --- CALCOLO TAGLIA DA METRI ---
 
 function calcolaTagliaPokemon(heightm) {
     const h = parseFloat(heightm) || 1.0;
-    // <2ft (<0.60m): Tiny (1 Casella)
-    // 2ft - 4ft (0.60m - 1.20m): Small (1 Casella)
-    // 4ft - 8ft (1.20m - 2.40m): Medium (1 Casella)
-    // 8ft - 12ft (2.40m - 3.65m): Large (2x2 Caselle)
-    // >12ft (>3.65m): Huge (3x3 Caselle)
-
     if (h < 0.60) {
         return { tag: "Tiny", ingombro: "1x1", hText: `${h}m` };
     } else if (h < 1.20) {
@@ -188,9 +190,10 @@ function calcolaTagliaPokemon(heightm) {
     }
 }
 
-// --- DETERMINAZIONE DEL GENERE ---
+// --- DETERMINAZIONE GENERE ---
 
 function determinaGenerePkm(pkmData) {
+    if (!selectGender) return "⚪";
     const sel = selectGender.value;
     if (sel !== "auto") {
         if (sel === "M") return "♂️";
@@ -211,56 +214,122 @@ function determinaGenerePkm(pkmData) {
     return Math.random() < 0.5 ? "♂️" : "♀️";
 }
 
-// --- GESTIONE SPRITE PMDCOLLAB / SHOWDOWN ---
+// --- GESTIONE SPRITE LOCALE (DALLA DIRECTORY SUPERIORE ../portrait/) ---
 
 function aggiornaSpritePokemon() {
+    if (!sbSprite || !sbSpritePlaceholder) return;
     if (!pokemonSelezionatoData) {
         sbSprite.style.display = "none";
         sbSpritePlaceholder.style.display = "block";
         return;
     }
 
-    const num = pokemonSelezionatoData.num;
-    if (!num) {
-        sbSprite.style.display = "none";
-        sbSpritePlaceholder.style.display = "block";
-        return;
-    }
+    // 1. Identificativi del Pokémon
+    const specieBase = (pokemonSelezionatoData.baseSpecies || pokemonSelezionatoData.name)
+    .toLowerCase().replace(/[^a-z0-9]/g, '');
+    const pkmNamePuro = pokemonSelezionatoData.name
+    .toLowerCase().replace(/[^a-z0-9\-]/g, '');
+    const pkmKey = pulisciNomePuro(chiavePkmSelezionata || pokemonSelezionatoData.name);
 
-    const numStr = num.toString().padStart(4, '0');
-    const isShiny = chkIsShiny.checked;
+    const isShiny = chkIsShiny && chkIsShiny.checked;
+    const shinySuffix = isShiny ? "_shiny" : "";
+    const gender = determinaGenerePkm(pokemonSelezionatoData);
+    const genderSuffix = gender === "♂️" ? "_M" : (gender === "♀️" ? "_F" : "");
 
-    // Percorso principale da PMDCollab Portrait repository
-    // Per i portrait standard: portrait/0025/Normal.png
-    let urlPortrait = `https://raw.githubusercontent.com/PMDCollab/SpriteCollab/master/portrait/${numStr}/Normal.png`;
+    // 2. Lista a cascata di ricerca
+    const percorsiCandidati = [
+        // Caso con genere personalizzato (es: ../portrait/pikachu/pikachu_F.png)
+        genderSuffix ? `../portrait/${specieBase}/${specieBase}${genderSuffix}${shinySuffix}.png` : null,
+        genderSuffix ? `../portrait/${specieBase}/0001/0000/${specieBase}${genderSuffix}${shinySuffix}.png` : null,
 
-    // Se è Shiny o forma particolare con fallback
-    sbSprite.src = urlPortrait;
-    sbSprite.style.display = "block";
-    sbSpritePlaceholder.style.display = "none";
+        // Caso con forma specifica personalizzata (es: ../portrait/charizard/charizard-megax.png)
+        `../portrait/${specieBase}/${pkmNamePuro}${shinySuffix}.png`,
+        `../portrait/${specieBase}/${pkmKey}${shinySuffix}.png`,
 
-    // Fallback in caso di mancata icona PMD su Showdown Sprites
-    sbSprite.onerror = function() {
-        const rawKey = pulisciNomePuro(chiavePkmSelezionata || pokemonSelezionatoData.name);
-        const folder = isShiny ? "ani-shiny" : "ani";
-        sbSprite.src = `https://play.pokemonshowdown.com/sprites/${folder}/${rawKey}.gif`;
-        sbSprite.onerror = function() {
+        // Percorso standard generato dentro le sottocartelle
+        `../portrait/${specieBase}/0000/0000/${specieBase}${shinySuffix}.png`,
+        `../portrait/${specieBase}/0000/0001/${specieBase}${shinySuffix}.png`,
+        `../portrait/${specieBase}/0001/0000/${specieBase}${shinySuffix}.png`,
+        `../portrait/${specieBase}/0001/0001/${specieBase}${shinySuffix}.png`,
+
+        // Percorso di default principale nella cartella radice della specie
+        `../portrait/${specieBase}/${specieBase}${shinySuffix}.png`,
+        `../portrait/${specieBase}/${specieBase}.png`,
+
+        // Fallback Online Showdown animato
+        `https://play.pokemonshowdown.com/sprites/${isShiny ? 'ani-shiny' : 'ani'}/${pkmKey}.gif`
+    ].filter(Boolean);
+
+    let currentIdx = 0;
+
+    function caricaTentativo() {
+        if (currentIdx < percorsiCandidati.length) {
+            sbSprite.src = percorsiCandidati[currentIdx];
+            currentIdx++;
+        } else {
             sbSprite.style.display = "none";
             sbSpritePlaceholder.style.display = "block";
-        };
+        }
+    }
+
+    sbSprite.onload = function() {
+        sbSprite.style.display = "block";
+        sbSpritePlaceholder.style.display = "none";
     };
+
+    sbSprite.onerror = function() {
+        caricaTentativo();
+    };
+
+    caricaTentativo();
+}
+
+// --- SALVA UNICAMENTE L'IMMAGINE DEL POKÉMON ---
+
+if (btnSalvaSoloSprite) {
+    btnSalvaSoloSprite.addEventListener('click', async () => {
+        if (!pokemonSelezionatoData || !sbSprite || !sbSprite.src || sbSprite.style.display === "none") {
+            alert("Nessun Pokémon selezionato o immagine non disponibile!");
+            return;
+        }
+
+        const nomePkm = (pokemonSelezionatoData.name || 'Pokemon').replace(/\s+/g, '_');
+        const isShiny = (chkIsShiny && chkIsShiny.checked) ? '_Shiny' : '';
+        const ext = sbSprite.src.endsWith('.gif') ? '.gif' : '.png';
+        const filename = `${nomePkm}${isShiny}${ext}`;
+
+        try {
+            const response = await fetch(sbSprite.src);
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        } catch (e) {
+            const link = document.createElement('a');
+            link.href = sbSprite.src;
+            link.target = "_blank";
+            link.download = filename;
+            link.click();
+        }
+    });
 }
 
 // --- CALCOLO STATISTICHE ---
 
 function calcolaEDistribuisciStatistiche() {
-    if (!pokemonSelezionatoData && inputPkmSearch.value.trim() !== "") {
+    if (!pokemonSelezionatoData && inputPkmSearch && inputPkmSearch.value.trim() !== "") {
         cercaEImpostaPokemon(inputPkmSearch.value.trim());
     }
     if (!pokemonSelezionatoData) return;
 
-    const livello = parseInt(inputLivello.value) || 1;
-    const eBoss = chkIsBoss.checked;
+    const livello = parseInt(inputLivello ? inputLivello.value : 1) || 1;
+    const eBoss = chkIsBoss ? chkIsBoss.checked : false;
 
     const teamHpBase = 30 + (livello - 1) * 10;
     const teamModBase = 10 + (livello - 1) * 10;
@@ -285,13 +354,13 @@ function calcolaEDistribuisciStatistiche() {
         targetModPool = Math.round(teamModBase * frazioneHpStandard);
     }
 
-    statHpInput.value = targetHp;
-    statAtkInput.value = Math.round(targetModPool * (baseStatsList.atk / sommaBase)) + livello;
-    statDefInput.value = Math.round(targetModPool * (baseStatsList.def / sommaBase)) + livello;
-    statSpaInput.value = Math.round(targetModPool * (baseStatsList.spa / sommaBase)) + livello;
-    statSpdInput.value = Math.round(targetModPool * (baseStatsList.spd / sommaBase)) + livello;
-    statSpeInput.value = Math.round(targetModPool * (baseStatsList.spe / sommaBase)) + livello;
-    statIqInput.value = Math.round(targetModPool * (baseStatsList.iq / sommaBase)) + livello;
+    if (statHpInput) statHpInput.value = targetHp;
+    if (statAtkInput) statAtkInput.value = Math.round(targetModPool * (baseStatsList.atk / sommaBase)) + livello;
+    if (statDefInput) statDefInput.value = Math.round(targetModPool * (baseStatsList.def / sommaBase)) + livello;
+    if (statSpaInput) statSpaInput.value = Math.round(targetModPool * (baseStatsList.spa / sommaBase)) + livello;
+    if (statSpdInput) statSpdInput.value = Math.round(targetModPool * (baseStatsList.spd / sommaBase)) + livello;
+    if (statSpeInput) statSpeInput.value = Math.round(targetModPool * (baseStatsList.spe / sommaBase)) + livello;
+    if (statIqInput) statIqInput.value = Math.round(targetModPool * (baseStatsList.iq / sommaBase)) + livello;
 
     popolaListaAbilitaVisibili();
     aggiornaPreviewStatblock();
@@ -339,7 +408,7 @@ function creaBadgeTipo(tipoNome) {
     return `<span class="type-badge" style="background-color: ${colore};">${tipoNome}</span>`;
 }
 
-// --- GESTIONE SELEZIONE POKÉMON ---
+// --- SELEZIONE POKÉMON ---
 
 function cercaEImpostaPokemon(nomeInserito) {
     const pokedexObj = (typeof exports !== 'undefined' && exports.BattlePokedex) ? exports.BattlePokedex : {};
@@ -350,13 +419,16 @@ function cercaEImpostaPokemon(nomeInserito) {
         pokemonSelezionatoData = pokedexObj[chiaveTrovata];
         caricaLearnsetEAbilitaPkm(chiaveTrovata);
         calcolaEDistribuisciStatistiche();
+        aggiornaSpritePokemon();
     }
 }
 
-inputPkmSearch.addEventListener('change', () => cercaEImpostaPokemon(inputPkmSearch.value.trim()));
-inputPkmSearch.addEventListener('input', () => cercaEImpostaPokemon(inputPkmSearch.value.trim()));
+if (inputPkmSearch) {
+    inputPkmSearch.addEventListener('change', () => cercaEImpostaPokemon(inputPkmSearch.value.trim()));
+    inputPkmSearch.addEventListener('input', () => cercaEImpostaPokemon(inputPkmSearch.value.trim()));
+}
 
-[inputLivello, selectGender, chkIsBoss, chkIsShiny].forEach(elem => {
+[inputLivello, selectGender, chkIsBoss, chkIsShiny].filter(Boolean).forEach(elem => {
     elem.addEventListener('input', calcolaEDistribuisciStatistiche);
     elem.addEventListener('change', calcolaEDistribuisciStatistiche);
 });
@@ -365,7 +437,7 @@ if (btnRecalcolaStat) {
     btnRecalcolaStat.addEventListener('click', calcolaEDistribuisciStatistiche);
 }
 
-[statHpInput, statAtkInput, statDefInput, statSpaInput, statSpdInput, statSpeInput, statIqInput].forEach(elem => {
+[statHpInput, statAtkInput, statDefInput, statSpaInput, statSpdInput, statSpeInput, statIqInput].filter(Boolean).forEach(elem => {
     elem.addEventListener('input', aggiornaPreviewStatblock);
 });
 
@@ -394,19 +466,23 @@ function caricaLearnsetEAbilitaPkm(chiavePkm) {
     aggiornaPreviewStatblock();
 }
 
-filtroStelleMosse.addEventListener('change', popolaListaMosseVisibili);
+if (filtroStelleMosse) filtroStelleMosse.addEventListener('change', popolaListaMosseVisibili);
 
-chkForceMosse.addEventListener('change', () => {
-    if (chkForceMosse.checked) {
-        boxCercaMossaExtra.classList.remove('hidden');
-    } else {
-        boxCercaMossaExtra.classList.add('hidden');
-        inputCercaMossaExtra.value = '';
-    }
-    popolaListaMosseVisibili();
-});
+if (chkForceMosse) {
+    chkForceMosse.addEventListener('change', () => {
+        if (boxCercaMossaExtra) {
+            if (chkForceMosse.checked) {
+                boxCercaMossaExtra.classList.remove('hidden');
+            } else {
+                boxCercaMossaExtra.classList.add('hidden');
+                if (inputCercaMossaExtra) inputCercaMossaExtra.value = '';
+            }
+        }
+        popolaListaMosseVisibili();
+    });
+}
 
-inputCercaMossaExtra.addEventListener('input', popolaListaMosseVisibili);
+if (inputCercaMossaExtra) inputCercaMossaExtra.addEventListener('input', popolaListaMosseVisibili);
 
 function ottieniDescrizioneMossa(m) {
     const cond = m['Conditions'] ? m['Conditions'].trim() : '';
@@ -423,9 +499,10 @@ function ottieniDescrizioneMossa(m) {
 }
 
 function popolaListaMosseVisibili() {
-    const stella = filtroStelleMosse.value;
-    const forzaMosse = chkForceMosse.checked;
-    const ricercaMossa = inputCercaMossaExtra.value.trim().toLowerCase();
+    if (!listaMosseElem) return;
+    const stella = filtroStelleMosse ? filtroStelleMosse.value : 'tutte';
+    const forzaMosse = chkForceMosse ? chkForceMosse.checked : false;
+    const ricercaMossa = inputCercaMossaExtra ? inputCercaMossaExtra.value.trim().toLowerCase() : '';
 
     listaMosseElem.innerHTML = '';
 
@@ -484,13 +561,13 @@ function popolaListaMosseVisibili() {
 
 // --- VERIFICA PREREQUISITI ABILITÀ ---
 
-chkForceAbilita.addEventListener('change', popolaListaAbilitaVisibili);
+if (chkForceAbilita) chkForceAbilita.addEventListener('change', popolaListaAbilitaVisibili);
 
 function verificaCompatibilitaAbilita(abilitaObj) {
-    if (chkForceAbilita.checked) return true;
+    if (chkForceAbilita && chkForceAbilita.checked) return true;
     if (!pokemonSelezionatoData) return false;
 
-    const livelloAttuale = parseInt(inputLivello.value) || 1;
+    const livelloAttuale = parseInt(inputLivello ? inputLivello.value : 1) || 1;
 
     const reqLevel = parseInt(abilitaObj['[Level Prerequisite]']);
     if (!isNaN(reqLevel) && livelloAttuale < reqLevel) {
@@ -516,14 +593,15 @@ function verificaCompatibilitaAbilita(abilitaObj) {
     return true;
 }
 
-inputCercaAbilita.addEventListener('input', popolaListaAbilitaVisibili);
+if (inputCercaAbilita) inputCercaAbilita.addEventListener('input', popolaListaAbilitaVisibili);
 
 function popolaListaAbilitaVisibili() {
+    if (!listaAbilitaElem) return;
     listaAbilitaElem.innerHTML = '';
 
-    const ricerca = inputCercaAbilita.value.trim().toLowerCase();
+    const ricerca = inputCercaAbilita ? inputCercaAbilita.value.trim().toLowerCase() : '';
     const abilitaInserite = new Set();
-    const forzaAbilita = chkForceAbilita.checked;
+    const forzaAbilita = chkForceAbilita ? chkForceAbilita.checked : false;
 
     if (pokemonSelezionatoData && pokemonSelezionatoData.abilities) {
         Object.values(pokemonSelezionatoData.abilities).forEach(aNome => {
@@ -581,97 +659,99 @@ function aggiungiRigaAbilita(aNome, effetto, categoria) {
     listaAbilitaElem.appendChild(li);
 }
 
-// --- PULSANTI DESELEZIONA TUTTO ---
+// --- PULSANTI DESELEZIONA ---
 
-btnClearMosse.addEventListener('click', () => {
-    mosseSelezionateStatblock = [];
-    popolaListaMosseVisibili();
-    aggiornaPreviewStatblock();
-});
+if (btnClearMosse) {
+    btnClearMosse.addEventListener('click', () => {
+        mosseSelezionateStatblock = [];
+        popolaListaMosseVisibili();
+        aggiornaPreviewStatblock();
+    });
+}
 
-btnClearAbilita.addEventListener('click', () => {
-    abilitaSelezionateStatblock = [];
-    popolaListaAbilitaVisibili();
-    aggiornaPreviewStatblock();
-});
+if (btnClearAbilita) {
+    btnClearAbilita.addEventListener('click', () => {
+        abilitaSelezionateStatblock = [];
+        popolaListaAbilitaVisibili();
+        aggiornaPreviewStatblock();
+    });
+}
 
 // --- PREVIEW STATBLOCK ---
 
 function aggiornaPreviewStatblock() {
     if (!pokemonSelezionatoData) return;
 
-    const isBoss = chkIsBoss.checked;
-    const isShiny = chkIsShiny.checked;
+    const isBoss = chkIsBoss ? chkIsBoss.checked : false;
+    const isShiny = chkIsShiny ? chkIsShiny.checked : false;
 
-    sbNome.textContent = (pokemonSelezionatoData.name || "Pokémon") + (isBoss ? " (BOSS)" : "");
+    if (sbNome) sbNome.textContent = (pokemonSelezionatoData.name || "Pokémon") + (isBoss ? " (BOSS)" : "");
     const tipiPkm = pokemonSelezionatoData.types || ["Normal"];
-    sbTipi.textContent = tipiPkm.join(" / ");
-    sbLivello.textContent = `Lv. ${inputLivello.value}`;
+    if (sbTipi) sbTipi.textContent = tipiPkm.join(" / ");
+    if (sbLivello) sbLivello.textContent = `Lv. ${inputLivello ? inputLivello.value : 1}`;
 
-    // Genere
-    sbGenderIcon.textContent = determinaGenerePkm(pokemonSelezionatoData);
+    if (sbGenderIcon) sbGenderIcon.textContent = determinaGenerePkm(pokemonSelezionatoData);
 
-    // Taglia & Dimensioni
     const sizeObj = calcolaTagliaPokemon(pokemonSelezionatoData.heightm);
-    sbSizeBadge.textContent = `Taglia: ${sizeObj.tag} (${sizeObj.ingombro} Caselle | ${sizeObj.hText})`;
+    if (sbSizeBadge) sbSizeBadge.textContent = `Taglia: ${sizeObj.tag} (${sizeObj.ingombro} Caselle | ${sizeObj.hText})`;
 
-    // Shiny
-    if (isShiny) {
-        sbShinyBadge.classList.remove('hidden');
-    } else {
-        sbShinyBadge.classList.add('hidden');
+    if (sbShinyBadge) {
+        if (isShiny) sbShinyBadge.classList.remove('hidden');
+        else sbShinyBadge.classList.add('hidden');
     }
 
-    // Sprite
     aggiornaSpritePokemon();
 
-    // Valori Statistiche
-    sbStatHp.textContent = statHpInput.value;
-    sbStatAtk.textContent = statAtkInput.value;
-    sbStatDef.textContent = statDefInput.value;
-    sbStatSpa.textContent = statSpaInput.value;
-    sbStatSpd.textContent = statSpdInput.value;
-    sbStatSpe.textContent = statSpeInput.value;
-    sbStatIq.textContent = statIqInput.value;
+    if (statHpInput && sbStatHp) sbStatHp.textContent = statHpInput.value;
+    if (statAtkInput && sbStatAtk) sbStatAtk.textContent = statAtkInput.value;
+    if (statDefInput && sbStatDef) sbStatDef.textContent = statDefInput.value;
+    if (statSpaInput && sbStatSpa) sbStatSpa.textContent = statSpaInput.value;
+    if (statSpdInput && sbStatSpd) sbStatSpd.textContent = statSpdInput.value;
+    if (statSpeInput && sbStatSpe) sbStatSpe.textContent = statSpeInput.value;
+    if (statIqInput && sbStatIq) sbStatIq.textContent = statIqInput.value;
 
     const rel = calcolaEfficaciaTipi(tipiPkm);
-    sbDebolezze.innerHTML = rel.debolezze.length > 0 ? rel.debolezze.map(creaBadgeTipo).join(" ") : 'Nessuna';
-    sbResistenze.innerHTML = rel.resistenze.length > 0 ? rel.resistenze.map(creaBadgeTipo).join(" ") : 'Nessuna';
-    sbImmunita.innerHTML = rel.immunita.length > 0 ? rel.immunita.map(creaBadgeTipo).join(" ") : 'Nessuna';
+    if (sbDebolezze) sbDebolezze.innerHTML = rel.debolezze.length > 0 ? rel.debolezze.map(creaBadgeTipo).join(" ") : 'Nessuna';
+    if (sbResistenze) sbResistenze.innerHTML = rel.resistenze.length > 0 ? rel.resistenze.map(creaBadgeTipo).join(" ") : 'Nessuna';
+    if (sbImmunita) sbImmunita.innerHTML = rel.immunita.length > 0 ? rel.immunita.map(creaBadgeTipo).join(" ") : 'Nessuna';
 
-    if (abilitaSelezionateStatblock.length === 0) {
-        sbAbilitaList.innerHTML = '<span style="color: #64748b; font-style: italic;">Nessuna abilità selezionata</span>';
-    } else {
-        sbAbilitaList.innerHTML = abilitaSelezionateStatblock.map(a => `
-        <div style="margin-bottom: 6px;">
-        <strong>${a.nome}:</strong> ${a.effetto}
-        </div>
-        `).join("");
+    if (sbAbilitaList) {
+        if (abilitaSelezionateStatblock.length === 0) {
+            sbAbilitaList.innerHTML = '<span style="color: #64748b; font-style: italic;">Nessuna abilità selezionata</span>';
+        } else {
+            sbAbilitaList.innerHTML = abilitaSelezionateStatblock.map(a => `
+            <div style="margin-bottom: 6px;">
+            <strong>${a.nome}:</strong> ${a.effetto}
+            </div>
+            `).join("");
+        }
     }
 
-    if (mosseSelezionateStatblock.length === 0) {
-        sbMosseList.innerHTML = '<div style="font-size: 0.9rem; color: #64748b; font-style: italic;">Nessuna mossa selezionata (max 4)</div>';
-    } else {
-        const tipiPkmLower = tipiPkm.map(t => t.toLowerCase());
-        sbMosseList.innerHTML = mosseSelezionateStatblock.map(m => {
-            const mType = m['[Type]'] || 'Normal';
-            const isStab = tipiPkmLower.includes(mType.toLowerCase());
-            const range = m['[Targets]'] || 'Adiacente';
-            const descr = ottieniDescrizioneMossa(m);
+    if (sbMosseList) {
+        if (mosseSelezionateStatblock.length === 0) {
+            sbMosseList.innerHTML = '<div style="font-size: 0.9rem; color: #64748b; font-style: italic;">Nessuna mossa selezionata (max 4)</div>';
+        } else {
+            const tipiPkmLower = tipiPkm.map(t => t.toLowerCase());
+            sbMosseList.innerHTML = mosseSelezionateStatblock.map(m => {
+                const mType = m['[Type]'] || 'Normal';
+                const isStab = tipiPkmLower.includes(mType.toLowerCase());
+                const range = m['[Targets]'] || 'Adiacente';
+                const descr = ottieniDescrizioneMossa(m);
 
-            return `
-            <div class="sb-move-card">
-            <div><strong>${m['[Name]']}</strong> ${isStab ? '<strong style="color: #15803d;">(STAB)</strong>' : ''} (${m['[LEVEL]'] || '★'})</div>
-            <div><strong>Tipo:</strong> ${mType} | <strong>Cat:</strong> ${m['[Category]']}</div>
-            <div><strong>Pwr:</strong> ${m['[Power]']} | <strong>PP:</strong> ${m['[PP]']} | <strong>Range:</strong> ${range}</div>
-            <div style="margin-top: 4px; font-size: 0.78rem; color: #334155;">${descr}</div>
-            </div>
-            `;
-        }).join("");
+                return `
+                <div class="sb-move-card">
+                <div><strong>${m['[Name]']}</strong> ${isStab ? '<strong style="color: #15803d;">(STAB)</strong>' : ''} (${m['[LEVEL]'] || '★'})</div>
+                <div><strong>Tipo:</strong> ${mType} | <strong>Cat:</strong> ${m['[Category]']}</div>
+                <div><strong>Pwr:</strong> ${m['[Power]']} | <strong>PP:</strong> ${m['[PP]']} | <strong>Range:</strong> ${range}</div>
+                <div style="margin-top: 4px; font-size: 0.78rem; color: #334155;">${descr}</div>
+                </div>
+                `;
+            }).join("");
+        }
     }
 }
 
-// --- GESTIONE CRONOLOGIA & SALVATAGGI (LOCALSTORAGE & JSON) ---
+// --- CRONOLOGIA & SALVATAGGI ---
 
 function salvaInStorage() {
     localStorage.setItem('statblock_cronologia_salvata', JSON.stringify(cronologiaSalvati));
@@ -689,42 +769,45 @@ function caricaCronologiaDaStorage() {
     aggiornaListaCronologiaVisiva();
 }
 
-btnSalvaCronologia.addEventListener('click', () => {
-    if (!pokemonSelezionatoData) {
-        alert("Seleziona prima un Pokémon da salvare!");
-        return;
-    }
+if (btnSalvaCronologia) {
+    btnSalvaCronologia.addEventListener('click', () => {
+        if (!pokemonSelezionatoData) {
+            alert("Seleziona prima un Pokémon da salvare!");
+            return;
+        }
 
-    const statblockCorrente = {
-        id: Date.now(),
-                                    pokemonName: pokemonSelezionatoData.name,
-                                    livello: inputLivello.value,
-                                    gender: selectGender.value,
-                                    isBoss: chkIsBoss.checked,
-                                    isShiny: chkIsShiny.checked,
-                                    stats: {
-                                        hp: statHpInput.value,
-                                        atk: statAtkInput.value,
-                                        def: statDefInput.value,
-                                        spa: statSpaInput.value,
-                                        spd: statSpdInput.value,
-                                        spe: statSpeInput.value,
-                                        iq: statIqInput.value
-                                    },
-                                    mosse: [...mosseSelezionateStatblock],
-                                    abilita: [...abilitaSelezionateStatblock]
-    };
+        const statblockCorrente = {
+            id: Date.now(),
+                                        pokemonName: pokemonSelezionatoData.name,
+                                        livello: inputLivello ? inputLivello.value : 1,
+                                        gender: selectGender ? selectGender.value : 'auto',
+                                        isBoss: chkIsBoss ? chkIsBoss.checked : false,
+                                        isShiny: chkIsShiny ? chkIsShiny.checked : false,
+                                        stats: {
+                                            hp: statHpInput ? statHpInput.value : 0,
+                                            atk: statAtkInput ? statAtkInput.value : 0,
+                                            def: statDefInput ? statDefInput.value : 0,
+                                            spa: statSpaInput ? statSpaInput.value : 0,
+                                            spd: statSpdInput ? statSpdInput.value : 0,
+                                            spe: statSpeInput ? statSpeInput.value : 0,
+                                            iq: statIqInput ? statIqInput.value : 0
+                                        },
+                                        mosse: [...mosseSelezionateStatblock],
+                                        abilita: [...abilitaSelezionateStatblock]
+        };
 
-    cronologiaSalvati.unshift(statblockCorrente);
-    salvaInStorage();
-    aggiornaListaCronologiaVisiva();
+        cronologiaSalvati.unshift(statblockCorrente);
+        salvaInStorage();
+        aggiornaListaCronologiaVisiva();
 
-    const originalHtml = btnSalvaCronologia.innerHTML;
-    btnSalvaCronologia.innerHTML = '<span>Salvato!</span> ✅';
-    setTimeout(() => { btnSalvaCronologia.innerHTML = originalHtml; }, 1500);
-});
+        const originalHtml = btnSalvaCronologia.innerHTML;
+        btnSalvaCronologia.innerHTML = '<span>Salvato!</span> ✅';
+        setTimeout(() => { btnSalvaCronologia.innerHTML = originalHtml; }, 1500);
+    });
+}
 
 function aggiornaListaCronologiaVisiva() {
+    if (!listaCronologiaPkm) return;
     listaCronologiaPkm.innerHTML = '';
 
     if (cronologiaSalvati.length === 0) {
@@ -750,21 +833,21 @@ window.caricaStatblockSalvato = function(index) {
     const sb = cronologiaSalvati[index];
     if (!sb) return;
 
-    inputPkmSearch.value = sb.pokemonName;
-    inputLivello.value = sb.livello;
-    selectGender.value = sb.gender || "auto";
-    chkIsBoss.checked = sb.isBoss;
-    chkIsShiny.checked = sb.isShiny || false;
+    if (inputPkmSearch) inputPkmSearch.value = sb.pokemonName;
+    if (inputLivello) inputLivello.value = sb.livello;
+    if (selectGender) selectGender.value = sb.gender || "auto";
+    if (chkIsBoss) chkIsBoss.checked = sb.isBoss;
+    if (chkIsShiny) chkIsShiny.checked = sb.isShiny || false;
 
     cercaEImpostaPokemon(sb.pokemonName);
 
-    statHpInput.value = sb.stats.hp;
-    statAtkInput.value = sb.stats.atk;
-    statDefInput.value = sb.stats.def;
-    statSpaInput.value = sb.stats.spa;
-    statSpdInput.value = sb.stats.spd;
-    statSpeInput.value = sb.stats.spe;
-    statIqInput.value = sb.stats.iq;
+    if (statHpInput) statHpInput.value = sb.stats.hp;
+    if (statAtkInput) statAtkInput.value = sb.stats.atk;
+    if (statDefInput) statDefInput.value = sb.stats.def;
+    if (statSpaInput) statSpaInput.value = sb.stats.spa;
+    if (statSpdInput) statSpdInput.value = sb.stats.spd;
+    if (statSpeInput) statSpeInput.value = sb.stats.spe;
+    if (statIqInput) statIqInput.value = sb.stats.iq;
 
     mosseSelezionateStatblock = [...sb.mosse];
     abilitaSelezionateStatblock = [...sb.abilita];
@@ -781,55 +864,79 @@ window.eliminaStatblockSalvato = function(event, index) {
     aggiornaListaCronologiaVisiva();
 };
 
-btnSvuotaCronologia.addEventListener('click', () => {
-    if (confirm("Sei sicuro di voler cancellare tutti i Pokémon salvati nella cronologia?")) {
-        cronologiaSalvati = [];
-        salvaInStorage();
-        aggiornaListaCronologiaVisiva();
-    }
-});
-
-btnExportJson.addEventListener('click', () => {
-    if (cronologiaSalvati.length === 0) {
-        alert("Nessun Pokémon da esportare!");
-        return;
-    }
-    const blob = new Blob([JSON.stringify(cronologiaSalvati, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.download = `Statblocks_Export_${Date.now()}.json`;
-    link.href = url;
-    link.click();
-});
-
-inputImportJson.addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = function(event) {
-        try {
-            const datiImportati = JSON.parse(event.target.result);
-            if (Array.isArray(datiImportati)) {
-                cronologiaSalvati = [...datiImportati, ...cronologiaSalvati];
-                salvaInStorage();
-                aggiornaListaCronologiaVisiva();
-                alert("Pokémon importati con successo!");
-            }
-        } catch(err) {
-            alert("Errore nel file JSON importato!");
+if (btnSvuotaCronologia) {
+    btnSvuotaCronologia.addEventListener('click', () => {
+        if (confirm("Vuoi cancellare tutta la cronologia?")) {
+            cronologiaSalvati = [];
+            salvaInStorage();
+            aggiornaListaCronologiaVisiva();
         }
-    };
-    reader.readAsText(file);
-});
+    });
+}
 
-btnSalvaImmagine.addEventListener('click', () => {
-    const previewCard = document.getElementById('statblock-preview');
-
-    html2canvas(previewCard, { scale: 2, useCORS: true }).then(canvas => {
-        const link = document.createElement('a');
-        link.download = `Statblock_${pokemonSelezionatoData ? pokemonSelezionatoData.name : 'Pokemon'}.png`;
-        link.href = canvas.toDataURL('image/png');
+if (btnExportJson) {
+    btnExportJson.addEventListener('click', () => {
+        if (cronologiaSalvati.length === 0) {
+            alert("Nessun Pokémon da esportare!");
+            return;
+        }
+        const blob = new Blob([JSON.stringify(cronologiaSalvati, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.download = `Statblocks_Export_${Date.now()}.json`;
+        link.href = url;
         link.click();
     });
-});
+}
+
+if (inputImportJson) {
+    inputImportJson.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            try {
+                const datiImportati = JSON.parse(event.target.result);
+                if (Array.isArray(datiImportati)) {
+                    cronologiaSalvati = [...datiImportati, ...cronologiaSalvati];
+                    salvaInStorage();
+                    aggiornaListaCronologiaVisiva();
+                    alert("Pokémon importati con successo!");
+                }
+            } catch(err) {
+                alert("Errore nel file JSON!");
+            }
+        };
+        reader.readAsText(file);
+    });
+}
+
+// --- SALVATAGGIO STATBLOCK SCHEDA COMPLETA (PNG) ---
+
+if (btnSalvaImmagine) {
+    btnSalvaImmagine.addEventListener('click', () => {
+        const previewCard = document.getElementById('statblock-preview');
+        const nomePkm = pokemonSelezionatoData ? pokemonSelezionatoData.name.replace(/\s+/g, '_') : 'Pokemon';
+        const lvPkm = inputLivello ? inputLivello.value : '1';
+        const isShiny = (chkIsShiny && chkIsShiny.checked) ? '_Shiny' : '';
+        const isBoss = (chkIsBoss && chkIsBoss.checked) ? '_Boss' : '';
+
+        const filename = `Statblock_${nomePkm}_Lv${lvPkm}${isBoss}${isShiny}.png`;
+
+        html2canvas(previewCard, {
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: '#ffffff'
+        }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }).catch(err => {
+            console.error("Errore salvataggio PNG:", err);
+            alert("Errore durante il salvataggio dell'immagine!");
+        });
+    });
+}

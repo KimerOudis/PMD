@@ -81,7 +81,7 @@
 
     .grid-inputs {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
       gap: 10px;
       align-items: flex-end;
     }
@@ -264,9 +264,17 @@
       margin-bottom: 12px;
     }
 
+    .sb-sprite-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
     .sb-sprite-container {
-      width: 72px;
-      height: 72px;
+      width: 80px;
+      height: 80px;
       background: #f1f5f9;
       border: 2px solid var(--card-border);
       border-radius: 6px;
@@ -274,7 +282,6 @@
       align-items: center;
       justify-content: center;
       overflow: hidden;
-      flex-shrink: 0;
     }
 
     .sb-sprite-img {
@@ -282,6 +289,21 @@
       max-height: 100%;
       image-rendering: pixelated;
     }
+
+    .btn-save-sprite {
+      background: #475569;
+      color: white;
+      border: 1px solid var(--card-border);
+      border-radius: 3px;
+      padding: 3px 5px;
+      font-size: 0.68rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      cursor: pointer;
+      width: 80px;
+      text-align: center;
+    }
+    .btn-save-sprite:hover { background: #1e293b; }
 
     .sb-header-info {
       flex: 1;
@@ -533,7 +555,7 @@
             <div class="labeled-box">
               <label>Sesso</label>
               <select id="select-gender">
-                <option value="auto">Auto (Dati Specie)</option>
+                <option value="auto">Auto (Specie)</option>
                 <option value="M">Maschio (♂️)</option>
                 <option value="F">Femmina (♀️)</option>
                 <option value="N">Asessuato (⚪)</option>
@@ -672,10 +694,14 @@
           <div id="statblock-preview">
 
             <div class="sb-header-wrapper">
-              <div class="sb-sprite-container">
-                <img id="sb-sprite" class="sb-sprite-img" src="" alt="Sprite" style="display: none;">
-                <span id="sb-sprite-placeholder" style="font-size: 1.8rem; color: #94a3b8;">❓</span>
+              <div class="sb-sprite-box">
+                <div class="sb-sprite-container">
+                  <img id="sb-sprite" class="sb-sprite-img" src="" alt="Sprite" style="display: none;">
+                  <span id="sb-sprite-placeholder" style="font-size: 1.8rem; color: #94a3b8;">❓</span>
+                </div>
+                <button id="btn-salva-solo-sprite" class="btn-save-sprite" title="Scarica solo l'immagine del Pokémon">Salva 🖼️</button>
               </div>
+
               <div class="sb-header-info">
                 <div class="sb-header-title-row">
                   <h2 id="sb-nome">Nessun Pokémon Selezionato</h2>
@@ -738,7 +764,7 @@
               <span>Salva in Cronologia</span> 💾
             </button>
             <button id="btn-salva-immagine" class="action-btn btn-png">
-              <span>Salva PNG</span> 📷
+              <span>Salva Statblock PNG</span> 📷
             </button>
           </div>
         </div>
@@ -772,10 +798,11 @@
   </div>
 
   <script>var exports = {};</script>
-  <script src="pokedex.js"></script>
-  <script src="mosse_data.js"></script>
-  <script src="learnsets_data.js"></script>
-  <script src="abilities_data.js"></script>
+  <!-- Carica database da cartella locale o cartella radice genitore -->
+  <script src="pokedex.js" onerror="this.onerror=null;this.src='../pokedex.js';"></script>
+  <script src="mosse_data.js" onerror="this.onerror=null;this.src='../mosse_data.js';"></script>
+  <script src="learnsets_data.js" onerror="this.onerror=null;this.src='../learnsets_data.js';"></script>
+  <script src="abilities_data.js" onerror="this.onerror=null;this.src='../abilities_data.js';"></script>
   <script src="script_statblock.js"></script>
 </body>
 </html>
