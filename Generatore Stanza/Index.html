@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Generatore Stanza Dungeon RPG</title>
+  <style>
+    :root {
+      --bg-color: #2b2b36;
+      --card-bg: #e2e8f0;
+      --card-border: #1e293b;
+      --header-bg: #1e293b;
+      --accent-red: #e3350d;
+      --accent-red-hover: #b82708;
+      --accent-blue: #2563eb;
+      --accent-blue-hover: #1d4ed8;
+      --accent-green: #15803d;
+      --accent-purple: #7e22ce;
+      --accent-amber: #d97706;
+      --text-main: #0f172a;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 1.5rem;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      margin: 0;
+    }
+
+    .sheet-container {
+      max-width: 1250px;
+      margin: auto;
+      background: #334155;
+      padding: 1.5rem;
+      border-radius: 10px;
+      border: 3px solid #0f172a;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+
+    h1 {
+      text-align: center;
+      color: #f8fafc;
+      margin-top: 0;
+      font-size: 1.8rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      text-shadow: 2px 2px 0px #0f172a;
+    }
+
+    .main-layout {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 1.5rem;
+    }
+
+    .top-controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      background: var(--card-bg);
+      padding: 1rem;
+      border: 2px solid var(--card-border);
+      border-radius: 6px;
+      margin-bottom: 1.5rem;
+      align-items: flex-end;
+    }
+
+    .labeled-box {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .labeled-box label {
+      font-size: 0.75rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      color: #475569;
+      margin-bottom: 4px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 0.55rem;
+      font-size: 0.95rem;
+      border: 2px solid var(--card-border);
+      border-radius: 4px;
+      background: white;
+      font-weight: bold;
+      color: var(--text-main);
+    }
+
+    .action-btn {
+      grid-column: 1 / -1;
+      background: var(--accent-red);
+      color: white;
+      border: 2px solid var(--card-border);
+      border-radius: 4px;
+      font-weight: bold;
+      font-size: 1.1rem;
+      text-transform: uppercase;
+      cursor: pointer;
+      padding: 0.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: 0 3px 0 var(--card-border);
+      transition: all 0.1s ease;
+      margin-top: 6px;
+    }
+
+    .action-btn:hover { background: var(--accent-red-hover); }
+    .action-btn:active { transform: translateY(2px); box-shadow: none; }
+
+    .btn-save-room {
+      background: var(--accent-amber);
+      color: white;
+      border: 2px solid var(--card-border);
+      border-radius: 4px;
+      font-weight: bold;
+      font-size: 1rem;
+      text-transform: uppercase;
+      cursor: pointer;
+      padding: 0.7rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 3px 0 var(--card-border);
+      margin: 1.2rem auto 0 auto;
+      transition: all 0.1s ease;
+    }
+    .btn-save-room:hover { background: #b45309; }
+    .btn-save-room:active { transform: translateY(2px); box-shadow: none; }
+
+    .event-banner {
+      padding: 0.8rem 1rem;
+      border-radius: 6px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      text-align: center;
+      margin-bottom: 1.2rem;
+      border: 2px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .event-kecleon { background: #bbf7d0; color: #14532d; border-color: #16a34a; }
+    .event-monster-house { background: #fecdd3; color: #881337; border-color: #e11d48; }
+
+    .room-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.2rem;
+    }
+
+    .box-card {
+      background: var(--card-bg);
+      border: 2px solid var(--card-border);
+      border-radius: 6px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card-header {
+      border-bottom: 2px solid var(--card-border);
+      padding-bottom: 0.4rem;
+      margin-bottom: 0.8rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .card-header h2 {
+      margin: 0;
+      font-size: 1.1rem;
+      text-transform: uppercase;
+      color: var(--card-border);
+    }
+
+    .card-subbar {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      margin-bottom: 0.8rem;
+      background: #cbd5e1;
+      padding: 6px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--card-border);
+    }
+
+    .card-subbar label {
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: #334155;
+      white-space: nowrap;
+    }
+
+    .card-subbar input {
+      width: 55px;
+      padding: 0.25rem 0.4rem;
+      font-size: 0.85rem;
+      text-align: center;
+    }
+
+    .btn-rnd-field {
+      background: #475569;
+      color: white;
+      border: 1.5px solid var(--card-border);
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      padding: 0.25rem 0.6rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .btn-rnd-field:hover { background: #334155; }
+
+    .item-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
+    }
+
+    .item-row {
+      background: white;
+      border: 1.5px solid var(--card-border);
+      border-radius: 4px;
+      padding: 0.5rem 0.6rem;
+      font-size: 0.88rem;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .gender-male { color: #2563eb; font-weight: bold; }
+    .gender-female { color: #db2777; font-weight: bold; }
+    .gender-none { color: #64748b; font-weight: bold; }
+
+    .badge-tag {
+      background: #e2e8f0;
+      color: #334155;
+      padding: 0.15rem 0.4rem;
+      border-radius: 3px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      border: 1px solid #cbd5e1;
+    }
+
+    .badge-level { background: #f59e0b; color: white; border-color: #b45309; }
+    .badge-category { background: #3b82f6; color: white; border-color: #1d4ed8; }
+    .badge-price { background: #15803d; color: white; border-color: #166534; }
+    .badge-shiny { background: #eab308; color: #78350f; border-color: #ca8a04; }
+
+    .mini-regen-btn {
+      background: var(--accent-blue);
+      color: white;
+      border: 1px solid var(--card-border);
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      padding: 0.25rem 0.4rem;
+      line-height: 1;
+    }
+
+    .mini-regen-btn:hover { background: var(--accent-blue-hover); }
+    .hidden { display: none !important; }
+
+    /* Barra Laterale Cronologia */
+    .history-card {
+      background: var(--card-bg);
+      border: 2px solid var(--card-border);
+      border-radius: 6px;
+      padding: 1rem;
+      height: fit-content;
+      position: sticky;
+      top: 1.5rem;
+    }
+
+    .history-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      max-height: 600px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .history-item {
+      background: white;
+      border: 1.5px solid var(--card-border);
+      border-radius: 4px;
+      padding: 0.5rem 0.6rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      transition: all 0.1s ease;
+    }
+
+    .history-item:hover {
+      background: #f1f5f9;
+      border-color: var(--accent-blue);
+    }
+
+    .btn-del-item {
+      background: #ef4444;
+      color: white;
+      border: none;
+      border-radius: 3px;
+      padding: 2px 6px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      line-height: 1;
+    }
+    .btn-del-item:hover { background: #dc2626; }
+
+    .btn-clear-selection {
+      background: #64748b;
+      color: white;
+      border: 1px solid var(--card-border);
+      border-radius: 3px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      padding: 2px 6px;
+      cursor: pointer;
+      text-transform: uppercase;
+    }
+    .btn-clear-selection:hover { background: #475569; }
+
+    .history-tools {
+      display: flex;
+      gap: 6px;
+      margin-top: 10px;
+      border-top: 2px solid var(--card-border);
+      padding-top: 10px;
+    }
+
+    .btn-tool {
+      flex: 1;
+      background: #475569;
+      color: white;
+      border: 1px solid var(--card-border);
+      border-radius: 3px;
+      padding: 0.4rem;
+      font-size: 0.75rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      cursor: pointer;
+      text-align: center;
+    }
+    .btn-tool:hover { background: #334155; }
+
+    @media (max-width: 950px) {
+      .main-layout { grid-template-columns: 1fr; }
+      .room-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="sheet-container">
+    <h1>Generatore Stanza Dungeon</h1>
+
+    <div class="main-layout">
+
+      <!-- Colonna Principale: Setup e Stanza -->
+      <div>
+
+        <!-- Setup Superiore -->
+        <div class="top-controls">
+          <div class="labeled-box">
+            <label>Dungeon</label>
+            <select id="select-dungeon">
+              <option value="Sabbie Ardenti">Sabbie Ardenti</option>
+              <option value="Fossa Ardente">Fossa Ardente</option>
+              <option value="Bosco dei Rintocchi">Bosco dei Rintocchi</option>
+              <option value="Miniere Marmoree">Miniere Marmoree</option>
+            </select>
+          </div>
+
+          <div class="labeled-box">
+            <label>N° Giocatori</label>
+            <select id="select-giocatori">
+              <option value="1">1 Giocatore</option>
+              <option value="2" selected>2 Giocatori</option>
+              <option value="3">3 Giocatori (+25% Pkm)</option>
+              <option value="4">4 Giocatori (+50% Pkm)</option>
+              <option value="5">5 Giocatori (+75% Pkm)</option>
+            </select>
+          </div>
+
+          <div class="labeled-box">
+            <label>Livello Max Pokémon</label>
+            <input type="number" id="input-max-level" value="5" min="1" max="100">
+          </div>
+
+          <div class="labeled-box">
+            <label>Evento Speciale</label>
+            <select id="select-force-evento">
+              <option value="CASUALE">Casuale (Raro)</option>
+              <option value="NORMALE">Nessuno (Stanza Standard)</option>
+              <option value="KECLEON">Shop di Kecleon 🏪</option>
+              <option value="MONSTER_HOUSE">Tana di Pokémon 💥</option>
+            </select>
+          </div>
+
+          <button id="btn-genera-stanza" class="action-btn">
+            <span>Genera Stanza Completa</span> 🎲
+          </button>
+        </div>
+
+        <!-- Banner Evento Speciale -->
+        <div id="banner-evento" class="event-banner hidden"></div>
+
+        <!-- Risultato Generazione Stanza -->
+        <div id="container-stanza" class="hidden">
+
+          <div class="room-grid">
+            <!-- Colonna Pokémon -->
+            <div class="box-card">
+              <div class="card-header">
+                <h2>👾 Pokémon (<span id="count-pkm">0</span>)</h2>
+              </div>
+              <div class="card-subbar">
+                <label>N° Base:</label>
+                <input type="number" id="input-num-pkm" value="0" min="0" max="30">
+                <button id="btn-rnd-pkm" class="btn-rnd-field" title="Rilancia e rigenera Pokémon">🎲</button>
+              </div>
+              <ul id="lista-pokemon" class="item-list"></ul>
+            </div>
+
+            <!-- Colonna Strumenti -->
+            <div class="box-card">
+              <div class="card-header">
+                <h2>🎒 Strumenti (<span id="count-item">0</span>)</h2>
+              </div>
+              <div class="card-subbar">
+                <label>N° Base:</label>
+                <input type="number" id="input-num-item" value="0" min="0" max="30">
+                <button id="btn-rnd-item" class="btn-rnd-field" title="Rilancia e rigenera Strumenti">🎲</button>
+              </div>
+              <ul id="lista-strumenti" class="item-list"></ul>
+            </div>
+
+            <!-- Colonna Trappole -->
+            <div class="box-card">
+              <div class="card-header">
+                <h2>⚠️ Trappole (<span id="count-trap">0</span>)</h2>
+              </div>
+              <div class="card-subbar">
+                <label>N° Base:</label>
+                <input type="number" id="input-num-trap" value="0" min="0" max="30">
+                <button id="btn-rnd-trap" class="btn-rnd-field" title="Rilancia e rigenera Trappole">🎲</button>
+              </div>
+              <ul id="lista-trappole" class="item-list"></ul>
+            </div>
+          </div>
+
+          <button id="btn-salva-cronologia" class="btn-save-room">
+            <span>Salva Stanza in Cronologia</span> 💾
+          </button>
+
+        </div>
+
+      </div>
+
+      <!-- Colonna Laterale: Cronologia Stanze -->
+      <div>
+        <div class="history-card">
+          <div class="card-header">
+            <h2 style="font-size: 1rem;">Cronologia Stanze</h2>
+            <button id="btn-svuota-cronologia" class="btn-clear-selection" title="Svuota lista">Svuota</button>
+          </div>
+
+          <ul id="lista-cronologia-stanze" class="history-list">
+            <li style="color: #64748b; font-style: italic; text-align: center; padding: 10px 0;">Nessuna stanza salvata</li>
+          </ul>
+
+          <div class="history-tools">
+            <button id="btn-export-json" class="btn-tool" title="Scarica file JSON">Esporta JSON</button>
+            <label class="btn-tool" style="margin: 0; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+              Importa JSON
+              <input type="file" id="input-import-json" accept=".json" style="display: none;">
+            </label>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>var exports = {};</script>
+  <script src="pokedex.js"></script>
+  <script src="script_stanza.js"></script>
+</body>
+</html>

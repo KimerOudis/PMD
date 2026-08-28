@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Generatore Missioni Pokémon RPG</title>
+  <style>
+    :root {
+      --bg-color: #2b2b36;
+      --card-bg: #e2e8f0;
+      --card-border: #1e293b;
+      --header-bg: #1e293b;
+      --accent-red: #e3350d;
+      --accent-red-hover: #b82708;
+      --accent-blue: #2563eb;
+      --accent-blue-hover: #1d4ed8;
+      --text-main: #0f172a;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 1.5rem;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      margin: 0;
+    }
+
+    .sheet-container {
+      max-width: 950px;
+      margin: auto;
+      background: #334155;
+      padding: 1.5rem;
+      border-radius: 10px;
+      border: 3px solid #0f172a;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+
+    h1 {
+      text-align: center;
+      color: #f8fafc;
+      margin-top: 0;
+      font-size: 1.8rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      text-shadow: 2px 2px 0px #0f172a;
+    }
+
+    /* Controlli Superiori */
+    .top-controls {
+      display: flex;
+      gap: 15px;
+      background: var(--card-bg);
+      padding: 12px 20px;
+      border: 2px solid var(--card-border);
+      border-radius: 6px;
+      margin-bottom: 1.5rem;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .labeled-box-top {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .labeled-box-top label {
+      font-size: 0.75rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      color: #475569;
+      margin-bottom: 4px;
+    }
+
+    select {
+      padding: 0.6rem;
+      font-size: 0.95rem;
+      border: 2px solid var(--card-border);
+      border-radius: 4px;
+      background: white;
+      font-weight: bold;
+      color: var(--text-main);
+    }
+
+    .action-btn {
+      background: var(--accent-red);
+      color: white;
+      border: 2px solid var(--card-border);
+      border-radius: 4px;
+      font-weight: bold;
+      font-size: 1.1rem;
+      text-transform: uppercase;
+      cursor: pointer;
+      padding: 0.8rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 3px 0 var(--card-border);
+      transition: all 0.1s ease;
+      align-self: flex-end;
+    }
+
+    .action-btn:hover { background: var(--accent-red-hover); }
+    .action-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--card-border); }
+
+    /* Layout Principale */
+    .sheet-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 1.5rem;
+    }
+
+    .box-card {
+      background: var(--card-bg);
+      border: 2px solid var(--card-border);
+      border-radius: 6px;
+      padding: 1rem;
+      position: relative;
+    }
+
+    .hidden { display: none !important; }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid var(--card-border);
+      padding-bottom: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .card-header h2 {
+      margin: 0;
+      font-size: 1.3rem;
+      text-transform: uppercase;
+      color: var(--card-border);
+    }
+
+    .badge-rank {
+      background: #f59e0b;
+      color: white;
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      border: 1px solid #b45309;
+      font-weight: bold;
+      font-size: 0.9rem;
+    }
+
+    .labeled-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .labeled-row .field-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .labeled-row label {
+      font-size: 0.75rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      color: #475569;
+      margin-bottom: 2px;
+    }
+
+    .field-display {
+      background: white;
+      border: 1.5px solid var(--card-border);
+      border-radius: 4px;
+      padding: 0.5rem;
+      min-height: 38px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+    }
+
+    textarea.field-display {
+      width: 100%;
+      height: 75px;
+      resize: none;
+      font-family: inherit;
+      font-size: 0.9rem;
+    }
+
+    .mini-regen-btn {
+      background: var(--accent-blue);
+      color: white;
+      border: 1px solid var(--card-border);
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      padding: 0.4rem 0.6rem;
+      align-self: flex-end;
+      margin-bottom: 2px;
+    }
+
+    .mini-regen-btn:hover { background: var(--accent-blue-hover); }
+
+    /* Cronologia */
+    .history-title {
+      margin: 0 0 10px 0;
+      font-size: 1rem;
+      text-transform: uppercase;
+      border-bottom: 2px solid var(--card-border);
+      padding-bottom: 4px;
+      color: var(--card-border);
+    }
+
+    .history-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      max-height: 480px;
+      overflow-y: auto;
+    }
+
+    .history-item {
+      padding: 0.5rem;
+      background: white;
+      border: 1.5px solid var(--card-border);
+      border-radius: 4px;
+      margin-bottom: 6px;
+      font-size: 0.85rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.1s ease;
+    }
+
+    .history-item:hover {
+      background: #e2e8f0;
+      border-color: var(--accent-red);
+    }
+
+    .history-item.active {
+      background: #fee2e2;
+      border-color: var(--accent-red);
+      color: var(--accent-red);
+    }
+
+    @media (max-width: 768px) {
+      .sheet-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="sheet-container">
+    <h1>Generatore Missioni Pokémon RPG</h1>
+
+    <!-- Controlli Superiori: Range Difficoltà -->
+    <div class="top-controls">
+      <div class="labeled-box-top">
+        <label>Grado Minimo</label>
+        <select id="select-grado-min">
+          <option value="F" selected>Grado F</option>
+          <option value="E">Grado E</option>
+          <option value="D">Grado D</option>
+          <option value="C">Grado C</option>
+          <option value="B">Grado B</option>
+          <option value="A">Grado A</option>
+          <option value="S">Grado S</option>
+        </select>
+      </div>
+
+      <div class="labeled-box-top">
+        <label>Grado Massimo</label>
+        <select id="select-grado-max">
+          <option value="F">Grado F</option>
+          <option value="E">Grado E</option>
+          <option value="D">Grado D</option>
+          <option value="C">Grado C</option>
+          <option value="B">Grado B</option>
+          <option value="A">Grado A</option>
+          <option value="S" selected>Grado S</option>
+        </select>
+      </div>
+
+      <button id="btn-genera-missione" class="action-btn">
+        <span>Genera Missione</span> 📜
+      </button>
+    </div>
+
+    <!-- Layout Principale -->
+    <div class="sheet-grid">
+
+      <!-- Colonna Sinistra: Scheda Missione Generata -->
+      <div id="card-missione" class="box-card hidden">
+        <div class="card-header">
+          <h2 id="m-tipo">---</h2>
+          <span id="m-grado" class="badge-rank">Grado F</span>
+        </div>
+
+        <div class="labeled-row">
+          <div class="field-container">
+            <label>Obiettivo Missione</label>
+            <div id="m-descrizione" class="field-display">---</div>
+          </div>
+        </div>
+
+        <div class="labeled-row">
+          <div class="field-container">
+            <label>Committente</label>
+            <div id="m-committente" class="field-display">---</div>
+          </div>
+          <button class="mini-regen-btn" id="btn-regen-committente" title="Rigenera Committente">🔄</button>
+        </div>
+
+        <div id="box-target" class="labeled-row">
+          <div class="field-container">
+            <label id="lbl-target">Ricercato / Da Aiutare</label>
+            <div id="m-target" class="field-display">---</div>
+          </div>
+          <button class="mini-regen-btn" id="btn-regen-target" title="Rigenera Target">🔄</button>
+        </div>
+
+        <div class="labeled-row">
+          <div class="field-container">
+            <label>Dungeon</label>
+            <div id="m-dungeon" class="field-display">---</div>
+          </div>
+          <button class="mini-regen-btn" id="btn-regen-dungeon" title="Rigenera Dungeon">🔄</button>
+        </div>
+
+        <div class="labeled-row">
+          <div class="field-container">
+            <label>Piano</label>
+            <div id="m-piano" class="field-display">---</div>
+          </div>
+          <button class="mini-regen-btn" id="btn-regen-piano" title="Rigenera Piano">🔄</button>
+        </div>
+
+        <div id="box-oggetto" class="labeled-row">
+          <div class="field-container">
+            <label>Strumento Richiesto</label>
+            <div id="m-oggetto" class="field-display">---</div>
+          </div>
+          <button class="mini-regen-btn" id="btn-regen-oggetto" title="Rigenera Strumento">🔄</button>
+        </div>
+
+        <div class="labeled-row">
+          <div class="field-container">
+            <label>Ricompensa</label>
+            <textarea id="m-ricompensa" class="field-display" readonly>---</textarea>
+          </div>
+          <button class="mini-regen-btn" id="btn-regen-ricompensa" title="Rigenera Ricompensa">🔄</button>
+        </div>
+      </div>
+
+      <!-- Colonna Destra: Cronologia Sessione -->
+      <div class="box-card">
+        <h3 class="history-title">Cronologia Missioni</h3>
+        <ul id="lista-cronologia" class="history-list">
+          <li style="color: #64748b; font-style: italic; text-align: center; padding: 10px 0;">Nessuna missione generata</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Inizializzazione necessaria per catturare exports.BattlePokedex di pokedex.js -->
+  <script>
+    var exports = {};
+  </script>
+  <script src="pokedex.js"></script>
+  <script src="script_missioni.js"></script>
+</body>
+</html>

@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Generatore Statblock Pokémon RPG</title>
+  <style>
+    :root {
+      --bg-color: #2b2b36;
+      --card-bg: #e2e8f0;
+      --card-border: #1e293b;
+      --header-bg: #1e293b;
+      --accent-red: #e3350d;
+      --accent-red-hover: #b82708;
+      --accent-green: #15803d;
+      --accent-green-hover: #166534;
+      --accent-blue: #2563eb;
+      --accent-blue-hover: #1d4ed8;
+      --accent-amber: #d97706;
+      --text-main: #0f172a;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 1.5rem;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      margin: 0;
+    }
+
+    .sheet-container {
+      max-width: 1250px;
+      margin: auto;
+      background: #334155;
+      padding: 1.5rem;
+      border-radius: 10px;
+      border: 3px solid #0f172a;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+
+    h1 {
+      text-align: center;
+      color: #f8fafc;
+      margin-top: 0;
+      font-size: 1.8rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      text-shadow: 2px 2px 0px #0f172a;
+    }
+
+    .main-layout {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 1.5rem;
+    }
+
+    .section-box {
+      background: var(--card-bg);
+      border: 2px solid var(--card-border);
+      border-radius: 6px;
+      padding: 1.2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .section-header-flex {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid var(--card-border);
+      padding-bottom: 4px;
+      margin-bottom: 10px;
+    }
+
+    .section-title {
+      margin: 0;
+      font-size: 1.1rem;
+      text-transform: uppercase;
+      color: var(--card-border);
+    }
+
+    .grid-inputs {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1.2fr 1fr;
+      gap: 12px;
+      align-items: flex-end;
+    }
+
+    .labeled-box {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .labeled-box label {
+      font-size: 0.75rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      color: #475569;
+      margin-bottom: 4px;
+    }
+
+    .checkbox-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: bold;
+      font-size: 0.85rem;
+      cursor: pointer;
+      user-select: none;
+      background: white;
+      padding: 0.55rem;
+      border: 2px solid var(--card-border);
+      border-radius: 4px;
+      height: 42px;
+    }
+
+    .checkbox-box input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 0.6rem;
+      font-size: 0.95rem;
+      border: 2px solid var(--card-border);
+      border-radius: 4px;
+      background: white;
+      font-weight: bold;
+      color: var(--text-main);
+    }
+
+    .btn-recalc {
+      background: var(--accent-blue);
+      color: white;
+      border: 2px solid var(--card-border);
+      border-radius: 4px;
+      font-weight: bold;
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      cursor: pointer;
+      padding: 0.6rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      height: 42px;
+      box-shadow: 0 2px 0 var(--card-border);
+      transition: all 0.1s ease;
+    }
+    .btn-recalc:hover { background: var(--accent-blue-hover); }
+    .btn-recalc:active { transform: translateY(2px); box-shadow: none; }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .stat-card {
+      background: white;
+      border: 2px solid var(--card-border);
+      border-radius: 4px;
+      padding: 6px;
+      text-align: center;
+    }
+
+    .stat-card label {
+      font-size: 0.7rem;
+      font-weight: bold;
+      color: #475569;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .stat-card input {
+      text-align: center;
+      padding: 0.4rem;
+      font-size: 1.1rem;
+    }
+
+    .selector-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    .item-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      max-height: 250px;
+      overflow-y: auto;
+      border: 2px solid var(--card-border);
+      border-radius: 4px;
+      background: white;
+    }
+
+    .item-row {
+      padding: 8px;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+
+    .item-row:hover { background: #f1f5f9; }
+    .item-row.selected { background: #dbeafe; border-left: 4px solid var(--accent-blue); }
+
+    .badge-star {
+      background: #f59e0b;
+      color: white;
+      padding: 0.1rem 0.4rem;
+      border-radius: 3px;
+      font-size: 0.75rem;
+    }
+
+    .badge-stab {
+      background: #15803d;
+      color: white;
+      padding: 0.1rem 0.3rem;
+      border-radius: 3px;
+      font-size: 0.7rem;
+      margin-left: 4px;
+    }
+
+    .btn-clear-selection {
+      background: #64748b;
+      color: white;
+      border: 1px solid var(--card-border);
+      border-radius: 3px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      padding: 2px 6px;
+      cursor: pointer;
+      text-transform: uppercase;
+    }
+    .btn-clear-selection:hover { background: #475569; }
+
+    .hidden { display: none !important; }
+
+    /* Statblock Preview */
+    #statblock-preview {
+      background: white;
+      border: 4px solid var(--card-border);
+      border-radius: 8px;
+      padding: 1.5rem;
+      color: var(--text-main);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+
+    .sb-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 3px solid var(--card-border);
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+    }
+
+    .sb-header h2 { margin: 0; font-size: 1.6rem; text-transform: uppercase; }
+    .sb-header .sb-meta { font-weight: bold; color: #475569; font-size: 1rem; }
+
+    .sb-stats-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+
+    .sb-stats-table th {
+      background: #1e293b;
+      color: white;
+      font-size: 0.75rem;
+      padding: 6px;
+      text-transform: uppercase;
+    }
+
+    .sb-stats-table td {
+      border: 1px solid var(--card-border);
+      padding: 8px;
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+
+    .sb-section-title {
+      font-size: 0.9rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      background: #e2e8f0;
+      padding: 4px 8px;
+      border-left: 4px solid #1e293b;
+      margin: 10px 0 6px 0;
+    }
+
+    .type-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      color: white;
+      font-weight: bold;
+      font-size: 0.8rem;
+      margin: 2px;
+      text-transform: uppercase;
+    }
+
+    .sb-moves-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .sb-move-card {
+      border: 1.5px solid var(--card-border);
+      border-radius: 4px;
+      padding: 8px;
+      background: #f8fafc;
+      font-size: 0.82rem;
+      line-height: 1.35;
+    }
+
+    .sb-move-card strong { color: var(--accent-red); }
+
+    .actions-bar {
+      display: flex;
+      gap: 12px;
+      margin-top: 15px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .action-btn {
+      color: white;
+      border: 2px solid var(--card-border);
+      border-radius: 4px;
+      font-weight: bold;
+      font-size: 1rem;
+      text-transform: uppercase;
+      cursor: pointer;
+      padding: 0.8rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 3px 0 var(--card-border);
+      transition: all 0.1s ease;
+    }
+    .action-btn:active { transform: translateY(2px); box-shadow: none; }
+    .btn-save-sb { background: var(--accent-amber); }
+    .btn-save-sb:hover { background: #b45309; }
+    .btn-png { background: var(--accent-green); }
+    .btn-png:hover { background: var(--accent-green-hover); }
+
+    /* Barra Laterale Cronologia */
+    .history-card {
+      background: var(--card-bg);
+      border: 2px solid var(--card-border);
+      border-radius: 6px;
+      padding: 1rem;
+      height: fit-content;
+      position: sticky;
+      top: 1.5rem;
+    }
+
+    .history-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      max-height: 600px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .history-item {
+      background: white;
+      border: 1.5px solid var(--card-border);
+      border-radius: 4px;
+      padding: 0.5rem 0.6rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      transition: all 0.1s ease;
+    }
+
+    .history-item:hover {
+      background: #f1f5f9;
+      border-color: var(--accent-blue);
+    }
+
+    .btn-del-item {
+      background: #ef4444;
+      color: white;
+      border: none;
+      border-radius: 3px;
+      padding: 2px 6px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      line-height: 1;
+    }
+    .btn-del-item:hover { background: #dc2626; }
+
+    .history-tools {
+      display: flex;
+      gap: 6px;
+      margin-top: 10px;
+      border-top: 2px solid var(--card-border);
+      padding-top: 10px;
+    }
+
+    .btn-tool {
+      flex: 1;
+      background: #475569;
+      color: white;
+      border: 1px solid var(--card-border);
+      border-radius: 3px;
+      padding: 0.4rem;
+      font-size: 0.75rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      cursor: pointer;
+      text-align: center;
+    }
+    .btn-tool:hover { background: #334155; }
+
+    @media (max-width: 950px) {
+      .main-layout { grid-template-columns: 1fr; }
+      .grid-inputs, .selector-grid, .sb-moves-grid { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: repeat(4, 1fr); }
+    }
+  </style>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+</head>
+<body>
+
+  <div class="sheet-container">
+    <h1>Generatore Statblock Pokémon</h1>
+
+    <div class="main-layout">
+
+      <!-- Colonna Sinistra: Configurazione & Anteprima -->
+      <div>
+
+        <!-- 1. Configurazione Incontro & Specie -->
+        <div class="section-box">
+          <h3 class="section-title">1. Configurazione Incontro & Specie</h3>
+          <div class="grid-inputs">
+            <div class="labeled-box">
+              <label>Seleziona Pokémon</label>
+              <input type="text" id="input-pkm-search" list="list-pokedex" placeholder="Scrivi il nome...">
+              <datalist id="list-pokedex"></datalist>
+            </div>
+
+            <div class="labeled-box">
+              <label>Livello (Lv.)</label>
+              <input type="number" id="input-livello" value="1" min="1" max="100">
+            </div>
+
+            <div class="labeled-box">
+              <label>&nbsp;</label>
+              <label class="checkbox-box">
+                <input type="checkbox" id="chk-is-boss">
+                <span>È un Boss (90-150% HP)</span>
+              </label>
+            </div>
+
+            <div class="labeled-box">
+              <label>&nbsp;</label>
+              <button id="btn-recalcola-stat" class="btn-recalc" title="Forza il ricalcolo delle statistiche">
+                <span>Rigenera</span> 🔄
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Statistiche Calcolate & Modificabili -->
+        <div class="section-box">
+          <h3 class="section-title">2. Statistiche Calcolate (Modificabili a mano)</h3>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <label>HP</label>
+              <input type="number" id="stat-hp" value="0">
+            </div>
+            <div class="stat-card">
+              <label>ATK</label>
+              <input type="number" id="stat-atk" value="0">
+            </div>
+            <div class="stat-card">
+              <label>DEF</label>
+              <input type="number" id="stat-def" value="0">
+            </div>
+            <div class="stat-card">
+              <label>SP.ATK</label>
+              <input type="number" id="stat-spa" value="0">
+            </div>
+            <div class="stat-card">
+              <label>SP.DEF</label>
+              <input type="number" id="stat-spd" value="0">
+            </div>
+            <div class="stat-card">
+              <label>SPE</label>
+              <input type="number" id="stat-spe" value="0">
+            </div>
+            <div class="stat-card">
+              <label>IQ</label>
+              <input type="number" id="stat-iq" value="0">
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Selezione Mosse & Abilità -->
+        <div class="section-box">
+          <div class="selector-grid">
+
+            <!-- Selezione Mosse -->
+            <div>
+              <div class="section-header-flex">
+                <h3 class="section-title">Mosse (Max 4)</h3>
+                <button id="btn-clear-mosse" class="btn-clear-selection">Deseleziona Tutto</button>
+              </div>
+
+              <div style="display: flex; gap: 8px; align-items: flex-end; margin-bottom: 8px;">
+                <div class="labeled-box" style="flex: 1; margin-bottom: 0;">
+                  <label>Filtra Stelle</label>
+                  <select id="filtro-stelle-mosse">
+                    <option value="tutte">Tutte le Stelle</option>
+                    <option value="★">★</option>
+                    <option value="★★">★★</option>
+                    <option value="★★★">★★★</option>
+                    <option value="★★★★">★★★★</option>
+                    <option value="★★★★★">★★★★★</option>
+                  </select>
+                </div>
+                <label class="checkbox-box" style="height: 38px;">
+                  <input type="checkbox" id="chk-force-mosse">
+                  <span>Forza Mosse</span>
+                </label>
+              </div>
+
+              <div id="box-cerca-mossa-extra" class="labeled-box hidden">
+                <label>Cerca qualsiasi Mossa</label>
+                <input type="text" id="input-cerca-mossa-extra" placeholder="Cerca tra tutte le mosse...">
+              </div>
+
+              <ul id="lista-mosse-imparabili" class="item-list">
+                <li style="padding: 10px; color: #64748b; font-style: italic;">Seleziona prima un Pokémon</li>
+              </ul>
+            </div>
+
+            <!-- Selezione Abilità -->
+            <div>
+              <div class="section-header-flex">
+                <h3 class="section-title">Abilità (Max 4)</h3>
+                <button id="btn-clear-abilita" class="btn-clear-selection">Deseleziona Tutto</button>
+              </div>
+
+              <div style="display: flex; gap: 8px; align-items: flex-end; margin-bottom: 8px;">
+                <div class="labeled-box" style="flex: 1; margin-bottom: 0;">
+                  <label>Cerca Abilità</label>
+                  <input type="text" id="input-cerca-abilita" placeholder="Cerca abilità...">
+                </div>
+                <label class="checkbox-box" style="height: 38px;">
+                  <input type="checkbox" id="chk-force-abilita">
+                  <span>Forza Abilità</span>
+                </label>
+              </div>
+
+              <ul id="lista-abilita" class="item-list">
+                <li style="padding: 10px; color: #64748b; font-style: italic;">Seleziona prima un Pokémon</li>
+              </ul>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- 4. Statblock Finale Generato -->
+        <div class="section-box">
+          <h3 class="section-title">4. Statblock Generato</h3>
+
+          <div id="statblock-preview">
+            <div class="sb-header">
+              <div>
+                <h2 id="sb-nome">Nessun Pokémon Selezionato</h2>
+                <span id="sb-tipi" style="font-weight: bold; color: var(--accent-blue);">---</span>
+              </div>
+              <div class="sb-meta">
+                <span id="sb-livello">Lv. 1</span>
+              </div>
+            </div>
+
+            <table class="sb-stats-table">
+              <thead>
+                <tr>
+                  <th>HP</th>
+                  <th>ATK</th>
+                  <th>DEF</th>
+                  <th>SP.ATK</th>
+                  <th>SP.DEF</th>
+                  <th>SPE</th>
+                  <th>IQ</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td id="sb-stat-hp">0</td>
+                  <td id="sb-stat-atk">0</td>
+                  <td id="sb-stat-def">0</td>
+                  <td id="sb-stat-spa">0</td>
+                  <td id="sb-stat-spd">0</td>
+                  <td id="sb-stat-spe">0</td>
+                  <td id="sb-stat-iq">0</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="sb-section-title">Relazioni di Tipo</div>
+            <div style="font-size: 0.85rem; margin-bottom: 10px;">
+              <div style="margin-bottom: 4px;"><strong>Debolezze (x2/x4):</strong> <span id="sb-debolezze">---</span></div>
+              <div style="margin-bottom: 4px;"><strong>Resistenze (x1/2 / x1/4):</strong> <span id="sb-resistenze">---</span></div>
+              <div><strong>Immunità (x0):</strong> <span id="sb-immunita">---</span></div>
+            </div>
+
+            <div class="sb-section-title">Abilità</div>
+            <div id="sb-abilita-list" style="font-size: 0.9rem; margin-bottom: 10px;">Nessuna abilità selezionata</div>
+
+            <div class="sb-section-title">Mosse</div>
+            <div id="sb-mosse-list" class="sb-moves-grid">
+              <div style="font-size: 0.9rem; color: #64748b;">Nessuna mossa selezionata</div>
+            </div>
+          </div>
+
+          <div class="actions-bar">
+            <button id="btn-salva-cronologia" class="action-btn btn-save-sb">
+              <span>Salva in Cronologia</span> 💾
+            </button>
+            <button id="btn-salva-immagine" class="action-btn btn-png">
+              <span>Salva PNG</span> 📷
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Colonna Destra: Cronologia & Gestione Salvataggi -->
+      <div>
+        <div class="history-card">
+          <div class="section-header-flex">
+            <h3 class="section-title">Cronologia Pokémon</h3>
+            <button id="btn-svuota-cronologia" class="btn-clear-selection" title="Svuota tutta la lista">Svuota</button>
+          </div>
+
+          <ul id="lista-cronologia-pkm" class="history-list">
+            <li style="color: #64748b; font-style: italic; text-align: center; padding: 10px 0;">Nessun Pokémon salvato</li>
+          </ul>
+
+          <div class="history-tools">
+            <button id="btn-export-json" class="btn-tool" title="Scarica file di backup">Esporta JSON</button>
+            <label class="btn-tool" style="margin: 0; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+              Importa JSON
+              <input type="file" id="input-import-json" accept=".json" style="display: none;">
+            </label>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>var exports = {};</script>
+  <script src="pokedex.js"></script>
+  <script src="mosse_data.js"></script>
+  <script src="learnsets_data.js"></script>
+  <script src="abilities_data.js"></script>
+  <script src="script_statblock.js"></script>
+</body>
+</html>

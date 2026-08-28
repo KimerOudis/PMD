@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Generatore Pokémon & Learnset - RPG Sheet</title>
+  <style>
+    :root {
+      --bg-color: #2b2b36;
+      --card-bg: #e2e8f0;
+      --card-border: #1e293b;
+      --header-bg: #1e293b;
+      --accent-red: #e3350d;
+      --accent-red-hover: #b82708;
+      --accent-blue: #2563eb;
+      --accent-blue-hover: #1d4ed8;
+      --accent-green: #15803d;
+      --accent-green-hover: #166534;
+      --text-main: #0f172a;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 1.5rem;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      margin: 0;
+    }
+
+    .sheet-container {
+      max-width: 950px;
+      margin: auto;
+      background: #334155;
+      padding: 1.5rem;
+      border-radius: 10px;
+      border: 3px solid #0f172a;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+
+    h1 {
+      text-align: center;
+      color: #f8fafc;
+      margin-top: 0;
+      font-size: 1.8rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      text-shadow: 2px 2px 0px #0f172a;
+    }
+
+    /* Controlli Superiori */
+    .top-controls {
+      display: flex;
+      gap: 20px;
+      background: var(--card-bg);
+      padding: 12px 20px;
+      border: 2px solid var(--card-border);
+      border-radius: 6px;
+      margin-bottom: 1.5rem;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    select {
+      padding: 0.4rem 0.6rem;
+      font-size: 0.9rem;
+      border: 2px solid var(--card-border);
+      border-radius: 4px;
+      background: white;
+      font-weight: bold;
+      color: var(--text-main);
+    }
+
+    .action-btn {
+      background: var(--accent-red);
+      color: white;
+      border: 2px solid var(--card-border);
+      border-radius: 4px;
+      font-weight: bold;
+      font-size: 1.1rem;
+      text-transform: uppercase;
+      cursor: pointer;
+      padding: 0.8rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 3px 0 var(--card-border);
+      transition: all 0.1s ease;
+    }
+
+    .action-btn:hover { background: var(--accent-red-hover); }
+    .action-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--card-border); }
+
+    .btn-secondary {
+      background: var(--accent-blue);
+      color: white;
+      border: 2px solid var(--card-border);
+      border-radius: 4px;
+      font-weight: bold;
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      cursor: pointer;
+      padding: 0.6rem 1rem;
+      width: 100%;
+      margin-top: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 3px 0 var(--card-border);
+      transition: all 0.1s ease;
+    }
+
+    .btn-secondary:hover { background: var(--accent-blue-hover); }
+    .btn-secondary:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--card-border); }
+    .btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .btn-copy {
+      background: var(--accent-green);
+      color: white;
+      border: 2px solid var(--card-border);
+      border-radius: 4px;
+      font-weight: bold;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      cursor: pointer;
+      padding: 0.6rem 1rem;
+      width: 100%;
+      margin-top: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 3px 0 var(--card-border);
+      transition: all 0.1s ease;
+    }
+
+    .btn-copy:hover { background: var(--accent-green-hover); }
+    .btn-copy:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--card-border); }
+
+    /* Layout Principale */
+    .sheet-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1.8fr;
+      gap: 1.5rem;
+    }
+
+    .box-card {
+      background: var(--card-bg);
+      border: 2px solid var(--card-border);
+      border-radius: 6px;
+      padding: 1rem;
+      position: relative;
+    }
+
+    .hidden { display: none !important; }
+
+    .card-header {
+      border-bottom: 2px solid var(--card-border);
+      padding-bottom: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .card-header h2 {
+      margin: 0;
+      font-size: 1.5rem;
+      text-transform: uppercase;
+      color: var(--card-border);
+    }
+
+    .labeled-box {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 10px;
+    }
+
+    .labeled-box label {
+      font-size: 0.75rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      color: #475569;
+      margin-bottom: 4px;
+    }
+
+    .field-display {
+      background: white;
+      border: 1.5px solid var(--card-border);
+      border-radius: 4px;
+      padding: 0.5rem;
+      min-height: 38px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+    }
+
+    .inner-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .inner-grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1.2fr;
+      gap: 10px;
+    }
+
+    .badge-star {
+      background: #f59e0b;
+      color: white;
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      border: 1px solid #b45309;
+      font-weight: bold;
+      font-size: 0.85rem;
+    }
+
+    textarea.field-display {
+      width: 100%;
+      height: 80px;
+      resize: none;
+      font-family: inherit;
+      font-size: 0.95rem;
+    }
+
+    .moves-header-box {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid var(--card-border);
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .moves-title {
+      margin: 0;
+      font-size: 1rem;
+      text-transform: uppercase;
+      color: var(--card-border);
+    }
+
+    .moves-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .move-item {
+      padding: 0.5rem;
+      background: white;
+      border: 1.5px solid var(--card-border);
+      border-radius: 4px;
+      margin-bottom: 6px;
+      font-size: 0.9rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.1s ease;
+    }
+
+    .move-item:hover {
+      background: #e2e8f0;
+      border-color: var(--accent-red);
+    }
+
+    .move-item.active {
+      background: #fee2e2;
+      border-color: var(--accent-red);
+      color: var(--accent-red);
+    }
+
+    @media (max-width: 768px) {
+      .sheet-grid { grid-template-columns: 1fr; }
+      .moves-header-box { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+</head>
+<body>
+
+  <div class="sheet-container">
+    <h1>Generatore Pokémon & Learnset</h1>
+
+    <!-- Controlli Superiori -->
+    <div class="top-controls">
+      <button id="btn-estrai-pkm" class="action-btn">
+        <span>Estrai Pokémon Casuale</span> 🎲
+      </button>
+    </div>
+
+    <!-- Layout Principale -->
+    <div class="sheet-grid">
+
+      <!-- Colonna di Sinistra -->
+      <div>
+        <div id="pkm-card" class="box-card hidden" style="margin-bottom: 1.5rem;">
+          <div class="card-header">
+            <h2 id="pkm-nome">---</h2>
+          </div>
+          <div class="labeled-box">
+            <label>Totale Mosse Trovate</label>
+            <div id="pkm-totale-mosse" class="field-display">0 mosse</div>
+          </div>
+        </div>
+
+        <div id="mossa-dettaglio" class="box-card hidden">
+          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h2 id="mt-nome" style="font-size: 1.1rem;">---</h2>
+            <span id="mt-stelle" class="badge-star">★</span>
+          </div>
+
+          <div class="inner-grid-2">
+            <div class="labeled-box">
+              <label>Tipo</label>
+              <div id="mt-tipo" class="field-display">-</div>
+            </div>
+            <div class="labeled-box">
+              <label>Categoria</label>
+              <div id="mt-categoria" class="field-display">-</div>
+            </div>
+          </div>
+
+          <div class="inner-grid-3">
+            <div class="labeled-box">
+              <label>Potenza</label>
+              <div id="mt-potenza" class="field-display">-</div>
+            </div>
+            <div class="labeled-box">
+              <label>PP</label>
+              <div id="mt-pp" class="field-display">-</div>
+            </div>
+            <div class="labeled-box">
+              <label>Bersaglio</label>
+              <div id="mt-bersaglio" class="field-display">-</div>
+            </div>
+          </div>
+
+          <div class="labeled-box">
+            <label>Condizioni</label>
+            <div id="mt-condizioni" class="field-display">-</div>
+          </div>
+
+          <div class="labeled-box">
+            <label>Altri Effetti</label>
+            <textarea id="mt-effetti" class="field-display" readonly>-</textarea>
+          </div>
+
+          <!-- Pulsante Copia negli Appunti -->
+          <button id="btn-copia-clipboard" class="btn-copy">
+            <span>Copia negli Appunti</span> 📋
+          </button>
+        </div>
+      </div>
+
+      <!-- Colonna di Destra -->
+      <div class="box-card">
+        <div class="moves-header-box">
+          <h3 class="moves-title">
+            <span>Mosse Imparabili</span>
+            <small id="badge-count" style="text-transform: none; font-size: 0.8rem;"></small>
+          </h3>
+
+          <select id="filtro-stelle">
+            <option value="tutte">Tutte (★ - ★★★★★)</option>
+            <option value="★">★ (Base)</option>
+            <option value="★★">★★</option>
+            <option value="★★★">★★★</option>
+            <option value="★★★★">★★★★</option>
+            <option value="★★★★★">★★★★★ (Rara)</option>
+          </select>
+        </div>
+
+        <ul id="lista-mosse-imparabili" class="moves-list">
+          <li style="color: #64748b; font-style: italic; text-align: center; padding: 10px 0;">Premi "Estrai Pokémon Casuale"</li>
+        </ul>
+
+        <button id="btn-estrai-mossa" class="btn-secondary" disabled>
+          <span>Estrai Mossa tra Queste</span> 🎯
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="mosse_data.js"></script>
+  <script src="learnsets_data.js"></script>
+  <script src="script_pokemon.js"></script>
+</body>
+</html>
