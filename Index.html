@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pokémon RPG Hub - Strumenti per Dungeon Master</title>
+  <style>
+    :root {
+      --bg-color: #1e293b;
+      --card-bg: #334155;
+      --card-hover: #475569;
+      --card-border: #0f172a;
+      --accent-red: #e3350d;
+      --accent-blue: #2563eb;
+      --accent-amber: #d97706;
+      --accent-green: #15803d;
+      --accent-purple: #7e22ce;
+      --text-main: #f8fafc;
+      --text-muted: #cbd5e1;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 2rem 1rem;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .hub-container {
+      max-width: 1100px;
+      width: 100%;
+      margin: auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    h1 {
+      font-size: 2.3rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #ffffff;
+      text-shadow: 2px 3px 0px #000000;
+      margin: 0 0 0.5rem 0;
+    }
+
+    p.subtitle {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      margin: 0;
+    }
+
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .tool-card {
+      background: var(--card-bg);
+      border: 3px solid var(--card-border);
+      border-radius: 10px;
+      padding: 1.5rem;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+      transition: all 0.2s ease-in-out;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tool-card:hover {
+      background: var(--card-hover);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 25px rgba(0,0,0,0.5);
+      border-color: #ffffff;
+    }
+
+    .tool-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 6px;
+    }
+
+    /* Colori barre superiori */
+    .card-statblock::before { background: var(--accent-red); }
+    .card-room::before { background: var(--accent-amber); }
+    .card-shop::before { background: var(--accent-green); }
+    .card-tutor::before { background: var(--accent-blue); }
+    .card-quest::before { background: var(--accent-purple); }
+
+    .card-icon {
+      font-size: 2.5rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .card-title {
+      font-size: 1.35rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      margin: 0 0 0.6rem 0;
+      color: #ffffff;
+    }
+
+    .card-desc {
+      font-size: 0.92rem;
+      line-height: 1.45;
+      color: var(--text-muted);
+      margin-bottom: 1.2rem;
+      flex-grow: 1;
+    }
+
+    .card-badge {
+      align-self: flex-start;
+      background: #0f172a;
+      color: #ffffff;
+      padding: 0.35rem 0.75rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      border: 1px solid #475569;
+    }
+
+    footer {
+      margin-top: 3rem;
+      text-align: center;
+      font-size: 0.85rem;
+      color: #64748b;
+    }
+
+    @media (max-width: 600px) {
+      h1 { font-size: 1.8rem; }
+      .tools-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="hub-container">
+    <header>
+      <h1>Pokémon RPG Hub</h1>
+      <p class="subtitle">Pannello di controllo strumenti per Dungeon Master</p>
+    </header>
+
+    <div class="tools-grid">
+
+      <!-- 1. Generatore Statblock -->
+      <a href="./Generatore%20Statblock/Index.html" class="tool-card card-statblock">
+        <div>
+          <div class="card-icon">📊</div>
+          <h2 class="card-title">Statblock Pokémon</h2>
+          <p class="card-desc">Calcolatore di schede statistiche, mosse, abilità, taglie, sprite PMD e calcolo Boss con salvataggio PNG e cronologia.</p>
+        </div>
+        <span class="card-badge">Scheda Nemici & Boss</span>
+      </a>
+
+      <!-- 2. Generatore Stanza -->
+      <a href="./Generatore%20Stanza/Index.html" class="tool-card card-room">
+        <div>
+          <div class="card-icon">🏰</div>
+          <h2 class="card-title">Stanza Dungeon</h2>
+          <p class="card-desc">Estrai incontri con Pokémon (con sesso e shiny), strumenti a prezzo ponderato, trappole ed eventi rari come Kecleon Shop e Tana.</p>
+        </div>
+        <span class="card-badge">Esplorazione</span>
+      </a>
+
+      <!-- 3. Generatore Mosse (Negozio MT) -->
+      <a href="./Generatore%20Mosse/Index.html" class="tool-card card-shop">
+        <div>
+          <div class="card-icon">🏬</div>
+          <h2 class="card-title">Negozio MT</h2>
+          <p class="card-desc">Estrai macchine tecniche casuali filtrate per stelle di rarità, calcolo prezzi in Poké e copia rapida negli appunti.</p>
+        </div>
+        <span class="card-badge">Emporio MT</span>
+      </a>
+
+      <!-- 4. Generatore Tutor -->
+      <a href="./Generatore%20Tutor/Index.html" class="tool-card card-tutor">
+        <div>
+          <div class="card-icon">🎓</div>
+          <h2 class="card-title">Move Tutor</h2>
+          <p class="card-desc">Estrai Pokémon completamente evoluti e genera learnset imparabili per rarità con visualizzazione dettagliata delle mosse.</p>
+        </div>
+        <span class="card-badge">Insegnamento Mosse</span>
+      </a>
+
+      <!-- 5. Generatore Missioni -->
+      <a href="./Generatore%20Missioni/Index.html" class="tool-card card-quest">
+        <div>
+          <div class="card-icon">📜</div>
+          <h2 class="card-title">Bacheca Missioni</h2>
+          <p class="card-desc">Genera richieste di soccorso, scorte, recupero strumenti e taglie per la bacheca della gilda.</p>
+        </div>
+        <span class="card-badge">Incarichi Gilda</span>
+      </a>
+
+    </div>
+
+    <footer>
+      Pokémon RPG Tools • Mystery Dungeon Tabletop System
+    </footer>
+  </div>
+
+</body>
+</html>
