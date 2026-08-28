@@ -5,6 +5,7 @@ let mossaCorrente = null;
 const btnGenera = document.getElementById('btn-genera-missione');
 const selectGradoMin = document.getElementById('select-grado-min');
 const selectGradoMax = document.getElementById('select-grado-max');
+const selectForzaSecondaria = document.getElementById('select-forza-secondaria');
 const cardMissione = document.getElementById('card-missione');
 const listaCronologia = document.getElementById('lista-cronologia');
 
@@ -48,32 +49,32 @@ const OGGETTI_BASE = [
 "Semeturpe", "Stordiseme", "Teleseme", "Geosasso", "Bastone"
 ];
 
+// Liste specifiche per le quest secondarie
+const SEMI_O_CIBO = [
+    "Baccarancia", "Baccaliegia", "Baccastagna", "Mela", "Grande Mela",
+"Semevista", "Semesalute", "Semesprint"
+];
+
+const BACCHE_E_SEMI = [
+    "Baccarancia", "Baccaliegia", "Baccastagna", "Baccapesca", "Baccafrago", "Baccapera",
+"Semesalute", "Semevista"
+];
+
+const ORB_LIST = [
+    "All-Mach Orb", "Blowback Orb", "Cleanse Orb", "Decoy Orb", "Drought Orb",
+"Escape Orb", "Foe-Seal Orb", "Foe-Fear Orb", "Snowy Orb", "Identify Orb",
+"Invisify Orb", "Lasso Orb", "Luminous Orb", "Mobile Orb", "Nullify Orb",
+"One-Room Orb", "One-Shot Orb", "Pierce Orb", "Radar Orb", "Rainy Orb",
+"Rebound Orb", "Rollcall Orb", "Sandy Orb", "Scanner Orb", "See-Trap Orb",
+"Silence Orb", "Slow Orb", "Sunny Orb", "Totter Orb", "Trawl Orb",
+"Lock Orb", "Warp Orb"
+];
+
 const GOMME_COLORATE = [
-    "Gomma Blue (Quiet)",
-    "Gomma Brown (Mild)",
-    "Gomma Green (Relaxed)",
-    "Gomma Sapphire (Lonely)",
-    "Gomma Magenta (Impish)",
-    "Gomma Mint (Gentle)",
-    "Gomma Olive (Calm)",
-    "Gomma Orange (Adamant)",
-    "Gomma Pink (Jolly)",
-    "Gomma Purple (Careful)",
-    "Gomma Red (Hasty)",
-    "Gomma Silver (Brave)",
-    "Gomma Lime (Quirky)",
-    "Gomma Violet (Bold)",
-    "Gomma Turquoise (Modest)",
-    "Gomma Yellow (Sassy)",
-    "Gomma Pearl (Rash)",
-    "Gomma Black (Serious)",
-    "Gomma Scarlet (Hardy)",
-    "Gomma Diamond (Docile)",
-    "Gomma White (Naive)",
-    "Gomma Platinum (Lax)",
-    "Gomma Gold (Bashful)",
-    "Gomma Ruby (Naughty)",
-    "Gomma Emerald (Timid)"
+    "Gommabianca", "Gommablu", "Gommachiara", "Gommacielo", "Gommadoro",
+"Gommaerba", "Gommagialla", "Gommagrigia", "Gommaincanto", "Gommamarrone",
+"Gommanera", "Gommarancia", "Gommareale", "Gommargento", "Gommarosea",
+"Gommarossa", "Gommaverde", "Gommaviola"
 ];
 
 const GRADI_BASE = {
@@ -114,6 +115,23 @@ const SET_ESCLUSI = new Set([
     "ironcrown", "terapagos", "pecharunt", "missingno"
 ]);
 
+// Lista Pokémon tecnologici per Algo e Spunzy (Bounty)
+const POKEMON_TECNOLOGICI = [
+    "Voltorb", "Electrode", "Voltorb-Hisui", "Electrode-Hisui",
+"Magnemite", "Magneton", "Magnezone", "Grimer", "Muk",
+"Koffing", "Weezing", "Porygon", "Porygon2", "Porygon-Z",
+"Klink", "Klang", "Klinklang", "Trubbish", "Garbodor",
+"Rotom", "Tynamo", "Eelektrik", "Eelektross", "Duraludon", "Archaludon"
+];
+
+// Lista Pokémon antichi/fossili per Graphe
+const POKEMON_ANTICHI_FOSSILI = [
+    "Omanyte", "Omastar", "Kabuto", "Kabutops", "Aerodactyl",
+"Lileep", "Cradily", "Anorith", "Armaldo", "Cranidos",
+"Rampardos", "Shieldon", "Bastiodon", "Tirtouga", "Carracosta",
+"Archen", "Archeops", "Tyrunt", "Tyrantrum", "Amaura", "Aurorus", "Yamask"
+];
+
 // --- HELPER FUNZIONI ESTRATTORI ---
 
 function pulisciStringa(str) {
@@ -144,8 +162,7 @@ function randomIntExcept(min, max, current) {
     return val;
 }
 
-// Lettura e filtraggio corretto da pokedex.js (exports.BattlePokedex)
-function estraiPokemonPerGrado(grado, pokemonAttuale = null) {
+function estraiPokemonPerGrado(grado, pokemonAttuale = null, soloStretto = false) {
     const pokedexObj = (typeof exports !== 'undefined' && exports.BattlePokedex) ? exports.BattlePokedex : {};
     const chiavi = Object.keys(pokedexObj);
 
@@ -157,20 +174,29 @@ function estraiPokemonPerGrado(grado, pokemonAttuale = null) {
 
         if (SET_ESCLUSI.has(kPuro) || kPuro.startsWith("pokestar") || kPuro.startsWith("arceus")) return false;
         if (pkm.isNonstandard && pkm.isNonstandard !== "Past" && pkm.isNonstandard !== "Future") return false;
-        if (pkm.forme && (pkm.forme.includes("Mega") || pkm.forme.includes("Gmax"))) return false;
+        if (pkm.forme || pkm.baseSpecies || kPuro.includes("-") || kPuro.includes("mega") || kPuro.includes("gmax") || kPuro.includes("totem") || kPuro.includes("alola") || kPuro.includes("galar") || kPuro.includes("hisui") || kPuro.includes("paldea")) {
+            return false;
+        }
 
         const haEvoluzioni = Array.isArray(pkm.evos) && pkm.evos.length > 0;
         const haPreEvoluzione = Boolean(pkm.prevo);
 
-        // Chi non si evolve affatto compie la missione a qualsiasi grado
         if (!haEvoluzioni && !haPreEvoluzione) return true;
 
-        if (grado === 'F' || grado === 'E') {
-            return haEvoluzioni && !haPreEvoluzione; // Primo stadio
-        } else if (grado === 'D' || grado === 'C') {
-            return haEvoluzioni && haPreEvoluzione;  // Secondo stadio
-        } else { // B, A, S
-            return !haEvoluzioni && haPreEvoluzione; // Terzo stadio
+        if (soloStretto) {
+            // Per i criminali (Outlaw): rigorosi sul grado esatto
+            if (grado === 'F' || grado === 'E') return haEvoluzioni && !haPreEvoluzione;
+            if (grado === 'D' || grado === 'C') return haEvoluzioni && haPreEvoluzione;
+            return !haEvoluzioni && haPreEvoluzione;
+        } else {
+            // Per clienti, scorte e salvataggi: flessibili verso il basso (stadi precedenti ammessi)
+            if (grado === 'F' || grado === 'E') {
+                return haEvoluzioni && !haPreEvoluzione;
+            } else if (grado === 'D' || grado === 'C') {
+                return (!haPreEvoluzione) || (haEvoluzioni && haPreEvoluzione);
+            } else {
+                return true;
+            }
         }
     });
 
@@ -185,8 +211,24 @@ function estraiPokemonPerGrado(grado, pokemonAttuale = null) {
     return randomItem(nomiValidi);
 }
 
-// Ricalcola la descrizione in base ai dati aggiornati
+function estraiPokemonErba() {
+    const pokedexObj = (typeof exports !== 'undefined' && exports.BattlePokedex) ? exports.BattlePokedex : {};
+    const chiavi = Object.keys(pokedexObj);
+    const erbaValidi = chiavi.filter(k => {
+        const pkm = pokedexObj[k];
+        const kPuro = pulisciStringa(k);
+        return pkm.types && pkm.types.includes("Grass") && !SET_ESCLUSI.has(kPuro) && !pkm.forme;
+    }).map(k => pokedexObj[k].name || k);
+
+    return erbaValidi.length > 0 ? randomItem(erbaValidi) : "Bulbasaur";
+}
+
 function aggiornaDescrizioneMissione(m) {
+    if (m.isSecondariaFissa) {
+        m.descrizione = m.descrizioneSecondariaCustom;
+        return;
+    }
+
     switch (m.tipoChiave) {
         case 'RESCUE':
             if (m.targetPkm === m.committente) {
@@ -250,46 +292,84 @@ function calcolaRicompensa(grado, tipoChiave, committenteNome) {
     return testo;
 }
 
-// --- LOGICA DI GENERAZIONE MISSIONE PRINCIPALE ---
+// --- GENERATORE DI MISSIONI SECONDARIE FISSE (NPC) ---
 
-function generaNuovaMissione() {
-    let idxMin = ORDINE_GRADI.indexOf(selectGradoMin.value);
-    let idxMax = ORDINE_GRADI.indexOf(selectGradoMax.value);
+function generaMissioneSecondariaFissa(npcForzato = null) {
+    const listaNPC = ['Chica', 'Tachys', 'Algo', 'Graphe', 'Flora', 'Spunzy'];
+    const npcScelto = npcForzato && listaNPC.includes(npcForzato) ? npcForzato : randomItem(listaNPC);
 
-    if (idxMin > idxMax) {
-        [idxMin, idxMax] = [idxMax, idxMin];
-    }
-
-    const gradiDisponibili = ORDINE_GRADI.slice(idxMin, idxMax + 1);
-    const gradoScelto = randomItem(gradiDisponibili);
-
-    const tipoChiave = randomItem(Object.keys(TIPI_MISSIONE));
-    const dungeonObj = randomItem(DUNGEONS);
-    const piano = randomInt(1, dungeonObj.maxPiani);
-
-    const committente = estraiPokemonPerGrado(gradoScelto);
+    let gradoScelto = randomItem(ORDINE_GRADI);
+    let dungeonObj = randomItem(DUNGEONS);
+    let piano = randomInt(1, dungeonObj.maxPiani);
+    let tipoChiave = 'RESCUE';
+    let committente = "";
     let targetPkm = null;
     let oggRichiesto = null;
+    let descCustom = "";
 
-    switch (tipoChiave) {
-        case 'RESCUE':
-            const eAmico = Math.random() < 0.5;
-            targetPkm = eAmico ? estraiPokemonPerGrado(gradoScelto, committente) : committente;
+    switch (npcScelto) {
+        case 'Chica': // Maractus: Raccolta semi o cibo
+            committente = "Maractus";
+            tipoChiave = 'ITEM_REQUEST';
+            oggRichiesto = randomItem(SEMI_O_CIBO);
+            descCustom = `Raccogliere ${oggRichiesto} al piano ${piano} di ${dungeonObj.nome} per conto di Chica (Maractus).`;
             break;
 
-        case 'ITEM_REQUEST':
-        case 'ITEM_DELIVERY':
-            oggRichiesto = randomItem(OGGETTI_BASE);
+        case 'Tachys': // Zigzagoon galar: Scorta
+            committente = "Zigzagoon-Galar";
+            tipoChiave = 'ESCORT';
+            descCustom = `Scortare Tachys (Zigzagoon Galar) al piano ${piano} di ${dungeonObj.nome}.`;
             break;
 
-        case 'OUTLAW_BOUNTY':
-            targetPkm = estraiPokemonPerGrado(gradoScelto, committente);
+        case 'Algo': // Porygon: Bounty con Pokémon tecnologici
+            committente = "Porygon";
+            tipoChiave = 'OUTLAW_BOUNTY';
+            targetPkm = randomItem(POKEMON_TECNOLOGICI);
+            descCustom = `Trovare il ricercato tecnologico ${targetPkm} al piano ${piano} di ${dungeonObj.nome} per conto di Algo (Porygon).`;
+            break;
+
+        case 'Graphe': // Yamask: Bounty con antichi/fossili oppure raccolta di orb
+            committente = "Yamask";
+            if (Math.random() < 0.5) {
+                tipoChiave = 'OUTLAW_BOUNTY';
+                targetPkm = randomItem(POKEMON_ANTICHI_FOSSILI);
+                descCustom = `Trovare l'antico ricercato ${targetPkm} al piano ${piano} di ${dungeonObj.nome} per conto di Graphe (Yamask).`;
+            } else {
+                tipoChiave = 'ITEM_REQUEST';
+                oggRichiesto = randomItem(ORB_LIST);
+                descCustom = `Recuperare la ${oggRichiesto} al piano ${piano} di ${dungeonObj.nome} per le ricerche di Graphe (Yamask).`;
+            }
+            break;
+
+        case 'Flora': // Lilligant: Bacche, semesalute o rescue erba
+            committente = "Lilligant";
+            if (Math.random() < 0.5) {
+                tipoChiave = 'ITEM_REQUEST';
+                oggRichiesto = randomItem(BACCHE_E_SEMI);
+                descCustom = `Raccogliere ${oggRichiesto} al piano ${piano} di ${dungeonObj.nome} per Flora (Lilligant).`;
+            } else {
+                tipoChiave = 'RESCUE';
+                targetPkm = estraiPokemonErba();
+                descCustom = `Salvare il Pokémon di tipo Erba (${targetPkm}) smarrito al piano ${piano} di ${dungeonObj.nome} su richiesta di Flora (Lilligant).`;
+            }
+            break;
+
+        case 'Spunzy': // Spunzy (Pichu): Scorta o Bounty tecnologico
+            committente = "Pichu";
+            if (Math.random() < 0.5) {
+                tipoChiave = 'ESCORT';
+                descCustom = `Scortare Spunzy (Pichu) al piano ${piano} di ${dungeonObj.nome}.`;
+            } else {
+                tipoChiave = 'OUTLAW_BOUNTY';
+                targetPkm = randomItem(POKEMON_TECNOLOGICI);
+                descCustom = `Catturare il ricercato ${targetPkm} al piano ${piano} di ${dungeonObj.nome} per conto di Spunzy (Pichu).`;
+            }
             break;
     }
 
     const ricompensa = calcolaRicompensa(gradoScelto, tipoChiave, committente);
 
-    mossaCorrente = {
+    return {
         tipoChiave,
         grado: gradoScelto,
         dungeonObj,
@@ -298,10 +378,80 @@ function generaNuovaMissione() {
         targetPkm,
         oggRichiesto,
         ricompensa,
-        descrizione: ""
+        descrizione: descCustom,
+        isSecondariaFissa: true,
+        descrizioneSecondariaCustom: descCustom
     };
+}
 
-    aggiornaDescrizioneMissione(mossaCorrente);
+// --- LOGICA DI GENERAZIONE MISSIONE PRINCIPALE ---
+
+function generaNuovaMissione() {
+    let missione;
+    const selectForza = document.getElementById('select-forza-secondaria');
+    const forzatura = selectForza ? selectForza.value : 'nessuna';
+
+    if (forzatura && forzatura !== 'nessuna') {
+        // Forzatura manuale dal menu a tendina
+        missione = generaMissioneSecondariaFissa(forzatura);
+    } else if (Math.random() < 0.25) {
+        // 25% di probabilità casuale di attivare una quest secondaria
+        missione = generaMissioneSecondariaFissa();
+    } else {
+        // Missione standard normale
+        let idxMin = ORDINE_GRADI.indexOf(selectGradoMin.value);
+        let idxMax = ORDINE_GRADI.indexOf(selectGradoMax.value);
+
+        if (idxMin > idxMax) {
+            [idxMin, idxMax] = [idxMax, idxMin];
+        }
+
+        const gradiDisponibili = ORDINE_GRADI.slice(idxMin, idxMax + 1);
+        const gradoScelto = randomItem(gradiDisponibili);
+
+        const tipoChiave = randomItem(Object.keys(TIPI_MISSIONE));
+        const dungeonObj = randomItem(DUNGEONS);
+        const piano = randomInt(1, dungeonObj.maxPiani);
+
+        const committente = estraiPokemonPerGrado(gradoScelto, null, false);
+        let targetPkm = null;
+        let oggRichiesto = null;
+
+        switch (tipoChiave) {
+            case 'RESCUE':
+                const eAmico = Math.random() < 0.5;
+                targetPkm = eAmico ? estraiPokemonPerGrado(gradoScelto, committente, false) : committente;
+                break;
+
+            case 'ITEM_REQUEST':
+            case 'ITEM_DELIVERY':
+                oggRichiesto = randomItem(OGGETTI_BASE);
+                break;
+
+            case 'OUTLAW_BOUNTY':
+                targetPkm = estraiPokemonPerGrado(gradoScelto, committente, true);
+                break;
+        }
+
+        const ricompensa = calcolaRicompensa(gradoScelto, tipoChiave, committente);
+
+        missione = {
+            tipoChiave,
+            grado: gradoScelto,
+            dungeonObj,
+            piano,
+            committente,
+            targetPkm,
+            oggRichiesto,
+            ricompensa,
+            descrizione: "",
+            isSecondariaFissa: false
+        };
+
+        aggiornaDescrizioneMissione(missione);
+    }
+
+    mossaCorrente = missione;
     cronologiaMissioni.unshift(mossaCorrente);
     mostraMissione(mossaCorrente);
     aggiornaCronologiaVisiva();
@@ -348,7 +498,7 @@ function aggiornaCronologiaVisiva() {
         li.className = `history-item ${eAttiva ? 'active' : ''}`;
 
         li.innerHTML = `
-        <span>${TIPI_MISSIONE[m.tipoChiave].nome}</span>
+        <span>${TIPI_MISSIONE[m.tipoChiave].nome} (${m.committente})</span>
         <span class="badge-rank">${m.grado}</span>
         `;
 
@@ -368,7 +518,8 @@ btnGenera.addEventListener('click', generaNuovaMissione);
 
 btnRegenCommittente.addEventListener('click', () => {
     if (!mossaCorrente) return;
-    mossaCorrente.committente = estraiPokemonPerGrado(mossaCorrente.grado, mossaCorrente.committente);
+    if (mossaCorrente.isSecondariaFissa) return;
+    mossaCorrente.committente = estraiPokemonPerGrado(mossaCorrente.grado, mossaCorrente.committente, false);
 
     if (mossaCorrente.tipoChiave === 'RESCUE' && mossaCorrente.targetPkm === mossaCorrente.committente) {
         mossaCorrente.targetPkm = mossaCorrente.committente;
@@ -380,7 +531,9 @@ btnRegenCommittente.addEventListener('click', () => {
 
 btnRegenTarget.addEventListener('click', () => {
     if (!mossaCorrente || !mossaCorrente.targetPkm) return;
-    mossaCorrente.targetPkm = estraiPokemonPerGrado(mossaCorrente.grado, mossaCorrente.targetPkm);
+    if (mossaCorrente.isSecondariaFissa) return;
+    const eStretto = (mossaCorrente.tipoChiave === 'OUTLAW_BOUNTY');
+    mossaCorrente.targetPkm = estraiPokemonPerGrado(mossaCorrente.grado, mossaCorrente.targetPkm, eStretto);
     aggiornaDescrizioneMissione(mossaCorrente);
     mostraMissione(mossaCorrente);
 });
@@ -402,6 +555,7 @@ btnRegenPiano.addEventListener('click', () => {
 
 btnRegenOggetto.addEventListener('click', () => {
     if (!mossaCorrente || !mossaCorrente.oggRichiesto) return;
+    if (mossaCorrente.isSecondariaFissa) return;
     mossaCorrente.oggRichiesto = randomItemExcept(OGGETTI_BASE, mossaCorrente.oggRichiesto);
     aggiornaDescrizioneMissione(mossaCorrente);
     mostraMissione(mossaCorrente);

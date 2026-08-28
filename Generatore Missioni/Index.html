@@ -48,16 +48,15 @@
 
     /* Controlli Superiori */
     .top-controls {
-      display: flex;
-      gap: 15px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
       background: var(--card-bg);
-      padding: 12px 20px;
+      padding: 1rem;
       border: 2px solid var(--card-border);
       border-radius: 6px;
       margin-bottom: 1.5rem;
-      justify-content: center;
-      align-items: center;
-      flex-wrap: wrap;
+      align-items: flex-end;
     }
 
     .labeled-box-top {
@@ -81,6 +80,7 @@
       background: white;
       font-weight: bold;
       color: var(--text-main);
+      width: 100%;
     }
 
     .action-btn {
@@ -89,16 +89,17 @@
       border: 2px solid var(--card-border);
       border-radius: 4px;
       font-weight: bold;
-      font-size: 1.1rem;
+      font-size: 1rem;
       text-transform: uppercase;
       cursor: pointer;
-      padding: 0.8rem 2rem;
+      padding: 0.6rem 1rem;
       display: flex;
       align-items: center;
-      gap: 10px;
+      justify-content: center;
+      gap: 8px;
+      height: 42px;
       box-shadow: 0 3px 0 var(--card-border);
       transition: all 0.1s ease;
-      align-self: flex-end;
     }
 
     .action-btn:hover { background: var(--accent-red-hover); }
@@ -255,7 +256,7 @@
   <div class="sheet-container">
     <h1>Generatore Missioni Pokémon RPG</h1>
 
-    <!-- Controlli Superiori: Range Difficoltà -->
+    <!-- Controlli Superiori -->
     <div class="top-controls">
       <div class="labeled-box-top">
         <label>Grado Minimo</label>
@@ -280,6 +281,19 @@
           <option value="B">Grado B</option>
           <option value="A">Grado A</option>
           <option value="S" selected>Grado S</option>
+        </select>
+      </div>
+
+      <div class="labeled-box-top">
+        <label>Forza Quest Secondaria</label>
+        <select id="select-forza-secondaria">
+          <option value="nessuna" selected>-- Casuale (Normale) --</option>
+          <option value="Chica">Chica (Maractus)</option>
+          <option value="Tachys">Tachys (Zigzagoon Galar)</option>
+          <option value="Algo">Algo (Porygon)</option>
+          <option value="Graphe">Graphe (Yamask)</option>
+          <option value="Flora">Flora (Lilligant)</option>
+          <option value="Spunzy">Spunzy (Pichu)</option>
         </select>
       </div>
 
@@ -365,7 +379,6 @@
     </div>
   </div>
 
-  <!-- Inizializzazione necessaria per catturare exports.BattlePokedex di pokedex.js -->
   <script>
     var exports = {};
   </script>
