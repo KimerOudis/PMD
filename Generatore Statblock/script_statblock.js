@@ -1,12 +1,12 @@
 let listaMosseDB = [];
 let listaAbilitaGeneriche = [];
 let pokemonSelezionatoData = null;
+let chiavePkmSelezionata = "";
 let mosseImparabiliSpecie = [];
 
 let mosseSelezionateStatblock = [];
 let abilitaSelezionateStatblock = [];
 
-// Array della cronologia salvata (memorizzato in localStorage)
 let cronologiaSalvati = [];
 
 // Tabella Tipi Pokémon Ufficiale
@@ -45,7 +45,9 @@ const TUTTI_I_TIPI = Object.keys(COLORI_TIPI);
 const inputPkmSearch = document.getElementById('input-pkm-search');
 const listPokedex = document.getElementById('list-pokedex');
 const inputLivello = document.getElementById('input-livello');
+const selectGender = document.getElementById('select-gender');
 const chkIsBoss = document.getElementById('chk-is-boss');
+const chkIsShiny = document.getElementById('chk-is-shiny');
 const btnRecalcolaStat = document.getElementById('btn-recalcola-stat');
 
 const statHpInput = document.getElementById('stat-hp');
@@ -69,9 +71,15 @@ const listaAbilitaElem = document.getElementById('lista-abilita');
 const btnClearMosse = document.getElementById('btn-clear-mosse');
 const btnClearAbilita = document.getElementById('btn-clear-abilita');
 
+const sbSprite = document.getElementById('sb-sprite');
+const sbSpritePlaceholder = document.getElementById('sb-sprite-placeholder');
 const sbNome = document.getElementById('sb-nome');
 const sbTipi = document.getElementById('sb-tipi');
 const sbLivello = document.getElementById('sb-livello');
+const sbGenderIcon = document.getElementById('sb-gender-icon');
+const sbSizeBadge = document.getElementById('sb-size-badge');
+const sbShinyBadge = document.getElementById('sb-shiny-badge');
+
 const sbStatHp = document.getElementById('sb-stat-hp');
 const sbStatAtk = document.getElementById('sb-stat-atk');
 const sbStatDef = document.getElementById('sb-stat-def');
@@ -102,6 +110,7 @@ function pulisciNomePuro(nome) {
 window.addEventListener('DOMContentLoaded', () => {
     if (inputPkmSearch) inputPkmSearch.value = "";
     pokemonSelezionatoData = null;
+    chiavePkmSelezionata = "";
     mosseImparabiliSpecie = [];
     mosseSelezionateStatblock = [];
     abilitaSelezionateStatblock = [];
@@ -156,7 +165,93 @@ function popolaDatalistPokedex() {
 }
 popolaDatalistPokedex();
 
-// --- CALCOLO STATISTICHE CON OSCILLAZIONE HP BOSS (90-150%) ---
+// --- CALCOLO TAGLIA IN BASE AI METRI (CONVERSIONE DA FEET) ---
+
+function calcolaTagliaPokemon(heightm) {
+    const h = parseFloat(heightm) || 1.0;
+    // <2ft (<0.60m): Tiny (1 Casella)
+    // 2ft - 4ft (0.60m - 1.20m): Small (1 Casella)
+    // 4ft - 8ft (1.20m - 2.40m): Medium (1 Casella)
+    // 8ft - 12ft (2.40m - 3.65m): Large (2x2 Caselle)
+    // >12ft (>3.65m): Huge (3x3 Caselle)
+
+    if (h < 0.60) {
+        return { tag: "Tiny", ingombro: "1x1", hText: `${h}m` };
+    } else if (h < 1.20) {
+        return { tag: "Small", ingombro: "1x1", hText: `${h}m` };
+    } else if (h < 2.40) {
+        return { tag: "Medium", ingombro: "1x1", hText: `${h}m` };
+    } else if (h < 3.65) {
+        return { tag: "Large", ingombro: "2x2", hText: `${h}m` };
+    } else {
+        return { tag: "Huge", ingombro: "3x3", hText: `${h}m` };
+    }
+}
+
+// --- DETERMINAZIONE DEL GENERE ---
+
+function determinaGenerePkm(pkmData) {
+    const sel = selectGender.value;
+    if (sel !== "auto") {
+        if (sel === "M") return "♂️";
+        if (sel === "F") return "♀️";
+        return "⚪";
+    }
+
+    if (!pkmData) return "⚪";
+    if (pkmData.gender === "N") return "⚪";
+    if (pkmData.gender === "M") return "♂️";
+    if (pkmData.gender === "F") return "♀️";
+
+    if (pkmData.genderRatio) {
+        const ratioM = pkmData.genderRatio.M !== undefined ? pkmData.genderRatio.M : 0.5;
+        return Math.random() < ratioM ? "♂️" : "♀️";
+    }
+
+    return Math.random() < 0.5 ? "♂️" : "♀️";
+}
+
+// --- GESTIONE SPRITE PMDCOLLAB / SHOWDOWN ---
+
+function aggiornaSpritePokemon() {
+    if (!pokemonSelezionatoData) {
+        sbSprite.style.display = "none";
+        sbSpritePlaceholder.style.display = "block";
+        return;
+    }
+
+    const num = pokemonSelezionatoData.num;
+    if (!num) {
+        sbSprite.style.display = "none";
+        sbSpritePlaceholder.style.display = "block";
+        return;
+    }
+
+    const numStr = num.toString().padStart(4, '0');
+    const isShiny = chkIsShiny.checked;
+
+    // Percorso principale da PMDCollab Portrait repository
+    // Per i portrait standard: portrait/0025/Normal.png
+    let urlPortrait = `https://raw.githubusercontent.com/PMDCollab/SpriteCollab/master/portrait/${numStr}/Normal.png`;
+
+    // Se è Shiny o forma particolare con fallback
+    sbSprite.src = urlPortrait;
+    sbSprite.style.display = "block";
+    sbSpritePlaceholder.style.display = "none";
+
+    // Fallback in caso di mancata icona PMD su Showdown Sprites
+    sbSprite.onerror = function() {
+        const rawKey = pulisciNomePuro(chiavePkmSelezionata || pokemonSelezionatoData.name);
+        const folder = isShiny ? "ani-shiny" : "ani";
+        sbSprite.src = `https://play.pokemonshowdown.com/sprites/${folder}/${rawKey}.gif`;
+        sbSprite.onerror = function() {
+            sbSprite.style.display = "none";
+            sbSpritePlaceholder.style.display = "block";
+        };
+    };
+}
+
+// --- CALCOLO STATISTICHE ---
 
 function calcolaEDistribuisciStatistiche() {
     if (!pokemonSelezionatoData && inputPkmSearch.value.trim() !== "") {
@@ -167,7 +262,6 @@ function calcolaEDistribuisciStatistiche() {
     const livello = parseInt(inputLivello.value) || 1;
     const eBoss = chkIsBoss.checked;
 
-    // Valori medi base: Lv.1 = 30 HP / 10 Modificatori (+10 per livello)
     const teamHpBase = 30 + (livello - 1) * 10;
     const teamModBase = 10 + (livello - 1) * 10;
 
@@ -182,21 +276,16 @@ function calcolaEDistribuisciStatistiche() {
     let targetModPool = 0;
 
     if (eBoss) {
-        // Boss: HP oscillano tra 90% e 150% (0.90 - 1.50) in base al peso della specie
         const frazioneHpBoss = 0.90 + ((hpBaseNorm - 10) / 240) * (1.50 - 0.90);
         targetHp = Math.round(teamHpBase * frazioneHpBoss);
         targetModPool = teamModBase;
     } else {
-        // Nemico Standard: HP e Modificatori oscillano tra 50% e 75%
         const frazioneHpStandard = 0.50 + ((hpBaseNorm - 10) / 240) * (0.75 - 0.50);
         targetHp = Math.round(teamHpBase * frazioneHpStandard);
         targetModPool = Math.round(teamModBase * frazioneHpStandard);
     }
 
-    // 1. HP calcolati SENZA +livello
     statHpInput.value = targetHp;
-
-    // 2. Modificatori con +livello post-calcolo
     statAtkInput.value = Math.round(targetModPool * (baseStatsList.atk / sommaBase)) + livello;
     statDefInput.value = Math.round(targetModPool * (baseStatsList.def / sommaBase)) + livello;
     statSpaInput.value = Math.round(targetModPool * (baseStatsList.spa / sommaBase)) + livello;
@@ -208,7 +297,7 @@ function calcolaEDistribuisciStatistiche() {
     aggiornaPreviewStatblock();
 }
 
-// --- CALCOLO RELAZIONI DI TIPO ---
+// --- RELAZIONI DI TIPO ---
 
 function calcolaEfficaciaTipi(tipiPkm) {
     const tuttiTipi = Object.keys(TYPE_CHART);
@@ -257,6 +346,7 @@ function cercaEImpostaPokemon(nomeInserito) {
     const chiaveTrovata = Object.keys(pokedexObj).find(k => (pokedexObj[k].name || k).toLowerCase() === nomeInserito.toLowerCase());
 
     if (chiaveTrovata) {
+        chiavePkmSelezionata = chiaveTrovata;
         pokemonSelezionatoData = pokedexObj[chiaveTrovata];
         caricaLearnsetEAbilitaPkm(chiaveTrovata);
         calcolaEDistribuisciStatistiche();
@@ -266,7 +356,7 @@ function cercaEImpostaPokemon(nomeInserito) {
 inputPkmSearch.addEventListener('change', () => cercaEImpostaPokemon(inputPkmSearch.value.trim()));
 inputPkmSearch.addEventListener('input', () => cercaEImpostaPokemon(inputPkmSearch.value.trim()));
 
-[inputLivello, chkIsBoss].forEach(elem => {
+[inputLivello, selectGender, chkIsBoss, chkIsShiny].forEach(elem => {
     elem.addEventListener('input', calcolaEDistribuisciStatistiche);
     elem.addEventListener('change', calcolaEDistribuisciStatistiche);
 });
@@ -511,11 +601,31 @@ function aggiornaPreviewStatblock() {
     if (!pokemonSelezionatoData) return;
 
     const isBoss = chkIsBoss.checked;
+    const isShiny = chkIsShiny.checked;
+
     sbNome.textContent = (pokemonSelezionatoData.name || "Pokémon") + (isBoss ? " (BOSS)" : "");
     const tipiPkm = pokemonSelezionatoData.types || ["Normal"];
     sbTipi.textContent = tipiPkm.join(" / ");
     sbLivello.textContent = `Lv. ${inputLivello.value}`;
 
+    // Genere
+    sbGenderIcon.textContent = determinaGenerePkm(pokemonSelezionatoData);
+
+    // Taglia & Dimensioni
+    const sizeObj = calcolaTagliaPokemon(pokemonSelezionatoData.heightm);
+    sbSizeBadge.textContent = `Taglia: ${sizeObj.tag} (${sizeObj.ingombro} Caselle | ${sizeObj.hText})`;
+
+    // Shiny
+    if (isShiny) {
+        sbShinyBadge.classList.remove('hidden');
+    } else {
+        sbShinyBadge.classList.add('hidden');
+    }
+
+    // Sprite
+    aggiornaSpritePokemon();
+
+    // Valori Statistiche
     sbStatHp.textContent = statHpInput.value;
     sbStatAtk.textContent = statAtkInput.value;
     sbStatDef.textContent = statDefInput.value;
@@ -589,7 +699,9 @@ btnSalvaCronologia.addEventListener('click', () => {
         id: Date.now(),
                                     pokemonName: pokemonSelezionatoData.name,
                                     livello: inputLivello.value,
+                                    gender: selectGender.value,
                                     isBoss: chkIsBoss.checked,
+                                    isShiny: chkIsShiny.checked,
                                     stats: {
                                         hp: statHpInput.value,
                                         atk: statAtkInput.value,
@@ -625,7 +737,7 @@ function aggiornaListaCronologiaVisiva() {
         li.className = 'history-item';
         li.innerHTML = `
         <div style="flex: 1;" onclick="caricaStatblockSalvato(${index})">
-        <strong>${item.pokemonName}</strong> ${item.isBoss ? '<small style="color: #e3350d;">(Boss)</small>' : ''}
+        <strong>${item.pokemonName}</strong> ${item.isBoss ? '<small style="color: #e3350d;">(Boss)</small>' : ''} ${item.isShiny ? '✨' : ''}
         <div style="font-size: 0.75rem; color: #64748b;">Lv. ${item.livello} | HP ${item.stats.hp}</div>
         </div>
         <button class="btn-del-item" onclick="eliminaStatblockSalvato(event, ${index})" title="Elimina">🗑️</button>
@@ -640,7 +752,9 @@ window.caricaStatblockSalvato = function(index) {
 
     inputPkmSearch.value = sb.pokemonName;
     inputLivello.value = sb.livello;
+    selectGender.value = sb.gender || "auto";
     chkIsBoss.checked = sb.isBoss;
+    chkIsShiny.checked = sb.isShiny || false;
 
     cercaEImpostaPokemon(sb.pokemonName);
 
@@ -675,7 +789,6 @@ btnSvuotaCronologia.addEventListener('click', () => {
     }
 });
 
-// Esporta JSON
 btnExportJson.addEventListener('click', () => {
     if (cronologiaSalvati.length === 0) {
         alert("Nessun Pokémon da esportare!");
@@ -689,7 +802,6 @@ btnExportJson.addEventListener('click', () => {
     link.click();
 });
 
-// Importa JSON
 inputImportJson.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -711,11 +823,10 @@ inputImportJson.addEventListener('change', (e) => {
     reader.readAsText(file);
 });
 
-// Salva Immagine PNG
 btnSalvaImmagine.addEventListener('click', () => {
     const previewCard = document.getElementById('statblock-preview');
 
-    html2canvas(previewCard, { scale: 2 }).then(canvas => {
+    html2canvas(previewCard, { scale: 2, useCORS: true }).then(canvas => {
         const link = document.createElement('a');
         link.download = `Statblock_${pokemonSelezionatoData ? pokemonSelezionatoData.name : 'Pokemon'}.png`;
         link.href = canvas.toDataURL('image/png');

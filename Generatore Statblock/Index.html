@@ -81,8 +81,8 @@
 
     .grid-inputs {
       display: grid;
-      grid-template-columns: 2fr 1fr 1.2fr 1fr;
-      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 10px;
       align-items: flex-end;
     }
 
@@ -102,9 +102,9 @@
     .checkbox-box {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       font-weight: bold;
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       cursor: pointer;
       user-select: none;
       background: white;
@@ -112,6 +112,7 @@
       border: 2px solid var(--card-border);
       border-radius: 4px;
       height: 42px;
+      white-space: nowrap;
     }
 
     .checkbox-box input[type="checkbox"] {
@@ -254,17 +255,79 @@
       box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     }
 
-    .sb-header {
+    .sb-header-wrapper {
       display: flex;
-      justify-content: space-between;
+      gap: 15px;
       align-items: center;
       border-bottom: 3px solid var(--card-border);
-      padding-bottom: 8px;
+      padding-bottom: 10px;
       margin-bottom: 12px;
     }
 
-    .sb-header h2 { margin: 0; font-size: 1.6rem; text-transform: uppercase; }
-    .sb-header .sb-meta { font-weight: bold; color: #475569; font-size: 1rem; }
+    .sb-sprite-container {
+      width: 72px;
+      height: 72px;
+      background: #f1f5f9;
+      border: 2px solid var(--card-border);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .sb-sprite-img {
+      max-width: 100%;
+      max-height: 100%;
+      image-rendering: pixelated;
+    }
+
+    .sb-header-info {
+      flex: 1;
+    }
+
+    .sb-header-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      flex-wrap: wrap;
+    }
+
+    .sb-header-title-row h2 {
+      margin: 0;
+      font-size: 1.5rem;
+      text-transform: uppercase;
+    }
+
+    .sb-meta-details {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 4px;
+      font-size: 0.85rem;
+      font-weight: bold;
+      color: #475569;
+      flex-wrap: wrap;
+    }
+
+    .badge-size {
+      background: #334155;
+      color: white;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: bold;
+    }
+
+    .badge-shiny-tag {
+      background: #eab308;
+      color: #78350f;
+      border: 1px solid #ca8a04;
+      padding: 0.1rem 0.4rem;
+      border-radius: 3px;
+      font-size: 0.75rem;
+    }
 
     .sb-stats-table {
       width: 100%;
@@ -449,14 +512,14 @@
 
     <div class="main-layout">
 
-      <!-- Colonna Sinistra: Configurazione & Anteprima -->
+      <!-- Colonna Sinistra -->
       <div>
 
         <!-- 1. Configurazione Incontro & Specie -->
         <div class="section-box">
           <h3 class="section-title">1. Configurazione Incontro & Specie</h3>
           <div class="grid-inputs">
-            <div class="labeled-box">
+            <div class="labeled-box" style="grid-column: span 2;">
               <label>Seleziona Pokémon</label>
               <input type="text" id="input-pkm-search" list="list-pokedex" placeholder="Scrivi il nome...">
               <datalist id="list-pokedex"></datalist>
@@ -468,10 +531,28 @@
             </div>
 
             <div class="labeled-box">
+              <label>Sesso</label>
+              <select id="select-gender">
+                <option value="auto">Auto (Dati Specie)</option>
+                <option value="M">Maschio (♂️)</option>
+                <option value="F">Femmina (♀️)</option>
+                <option value="N">Asessuato (⚪)</option>
+              </select>
+            </div>
+
+            <div class="labeled-box">
               <label>&nbsp;</label>
               <label class="checkbox-box">
                 <input type="checkbox" id="chk-is-boss">
-                <span>È un Boss (90-150% HP)</span>
+                <span>Boss (90-150% HP)</span>
+              </label>
+            </div>
+
+            <div class="labeled-box">
+              <label>&nbsp;</label>
+              <label class="checkbox-box">
+                <input type="checkbox" id="chk-is-shiny">
+                <span>✨ Shiny</span>
               </label>
             </div>
 
@@ -589,13 +670,25 @@
           <h3 class="section-title">4. Statblock Generato</h3>
 
           <div id="statblock-preview">
-            <div class="sb-header">
-              <div>
-                <h2 id="sb-nome">Nessun Pokémon Selezionato</h2>
-                <span id="sb-tipi" style="font-weight: bold; color: var(--accent-blue);">---</span>
+
+            <div class="sb-header-wrapper">
+              <div class="sb-sprite-container">
+                <img id="sb-sprite" class="sb-sprite-img" src="" alt="Sprite" style="display: none;">
+                <span id="sb-sprite-placeholder" style="font-size: 1.8rem; color: #94a3b8;">❓</span>
               </div>
-              <div class="sb-meta">
-                <span id="sb-livello">Lv. 1</span>
+              <div class="sb-header-info">
+                <div class="sb-header-title-row">
+                  <h2 id="sb-nome">Nessun Pokémon Selezionato</h2>
+                  <span id="sb-livello" style="font-size: 1.1rem; font-weight: bold; color: #475569;">Lv. 1</span>
+                </div>
+                <div class="sb-meta-details">
+                  <span id="sb-tipi" style="font-weight: bold; color: var(--accent-blue);">---</span>
+                  <span>•</span>
+                  <span id="sb-gender-icon" style="font-size: 1rem;">⚪</span>
+                  <span>•</span>
+                  <span id="sb-size-badge" class="badge-size">Taglia: -</span>
+                  <span id="sb-shiny-badge" class="badge-shiny-tag hidden">✨ Shiny</span>
+                </div>
               </div>
             </div>
 
@@ -652,7 +745,7 @@
 
       </div>
 
-      <!-- Colonna Destra: Cronologia & Gestione Salvataggi -->
+      <!-- Colonna Destra: Cronologia -->
       <div>
         <div class="history-card">
           <div class="section-header-flex">
