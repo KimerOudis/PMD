@@ -39,7 +39,8 @@ const DUNGEONS = [
     { nome: "Bosco dei Rintocchi", maxPiani: 3 },
 { nome: "Sabbie Ardenti", maxPiani: 3 },
 { nome: "Fossa Ardente", maxPiani: 5 },
-{ nome: "Miniere Marmoree", maxPiani: 3 }
+{ nome: "Miniere Marmoree", maxPiani: 3 },
+{ nome: "Biblioteca Silente", maxPiani: 3 }
 ];
 
 const OGGETTI_BASE = [
@@ -184,12 +185,10 @@ function estraiPokemonPerGrado(grado, pokemonAttuale = null, soloStretto = false
         if (!haEvoluzioni && !haPreEvoluzione) return true;
 
         if (soloStretto) {
-            // Per i criminali (Outlaw): rigorosi sul grado esatto
             if (grado === 'F' || grado === 'E') return haEvoluzioni && !haPreEvoluzione;
             if (grado === 'D' || grado === 'C') return haEvoluzioni && haPreEvoluzione;
             return !haEvoluzioni && haPreEvoluzione;
         } else {
-            // Per clienti, scorte e salvataggi: flessibili verso il basso (stadi precedenti ammessi)
             if (grado === 'F' || grado === 'E') {
                 return haEvoluzioni && !haPreEvoluzione;
             } else if (grado === 'D' || grado === 'C') {
@@ -392,13 +391,10 @@ function generaNuovaMissione() {
     const forzatura = selectForza ? selectForza.value : 'nessuna';
 
     if (forzatura && forzatura !== 'nessuna') {
-        // Forzatura manuale dal menu a tendina
         missione = generaMissioneSecondariaFissa(forzatura);
     } else if (Math.random() < 0.25) {
-        // 25% di probabilità casuale di attivare una quest secondaria
         missione = generaMissioneSecondariaFissa();
     } else {
-        // Missione standard normale
         let idxMin = ORDINE_GRADI.indexOf(selectGradoMin.value);
         let idxMax = ORDINE_GRADI.indexOf(selectGradoMax.value);
 

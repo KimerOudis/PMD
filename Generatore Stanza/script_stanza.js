@@ -47,6 +47,18 @@ const DUNGEON_POKEMON = {
         { base: "Drilbur", evo1: "Excadrill", evo2: null },
         { base: "Noibat", evo1: "Noivern", evo2: null },
         { base: "Onix", evo1: "Steelix", evo2: null }
+    ],
+    "Biblioteca Silente": [
+        { base: "Litwick", evo1: "Lampent", evo2: "Chandelure" },
+        { base: "Misdreavus", evo1: "Mismagius", evo2: null },
+        { base: "Golett", evo1: "Golurk", evo2: null },
+        { base: "Sinistea", evo1: "Polteageist", evo2: null },
+        { base: "Impidimp", evo1: "Morgrem", evo2: "Grimmsnarl" },
+        { base: "Murkrow", evo1: "Honchkrow", evo2: null },
+        { base: "Blipbug", evo1: "Dottler", evo2: "Orbeetle" },
+        { base: "Wynaut", evo1: "Wobbuffet", evo2: null },
+        { base: "Karrablast", evo1: "Escavalier", evo2: null },
+        { base: "Shelmet", evo1: "Accelgor", evo2: null }
     ]
 };
 
@@ -146,7 +158,6 @@ function pulisciChiavePkm(str) {
     return str ? str.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
 }
 
-// Estrazione accurata genere da pokedex.js (con fallback standard 50/50 se non specificato)
 function estraiGenerePokemon(specieNome) {
     const pokedexObj = (typeof exports !== 'undefined' && exports.BattlePokedex) ? exports.BattlePokedex : {};
     const chiave = pulisciChiavePkm(specieNome);
@@ -170,12 +181,10 @@ function estraiGenerePokemon(specieNome) {
     : { icon: "♀️", css: "gender-female" };
 }
 
-// Estrazione Shiny (1 su 4.096)
 function estraiIsShiny() {
     return Math.random() < (1 / 4096);
 }
 
-// Randomizzatori quantità
 function estraiQuantitaPokemonBase() {
     const t = Math.random();
     if (t < 0.30) return 0;
@@ -201,7 +210,7 @@ function estraiQuantitaTrappole() {
     return 3;
 }
 
-// --- GENERAZIONE POKEMON (Cluster / Probabilità duplicati) ---
+// --- GENERAZIONE POKEMON ---
 
 function generaPoolSpecieValide(dungeonNome, maxLevel) {
     const specieDungeon = DUNGEON_POKEMON[dungeonNome] || DUNGEON_POKEMON["Sabbie Ardenti"];
@@ -258,13 +267,12 @@ function generaGruppoPokemonConDuplicati(dungeonNome, maxLevel, quantita) {
     return lista;
 }
 
-// --- GENERAZIONE STRUMENTI IN 2 STEP (Categoria -> Ponderazione Interna) ---
+// --- GENERAZIONE STRUMENTI ---
 
 function estraiDaListaPonderata(listaNomi) {
     let pool = [];
     listaNomi.forEach(nome => {
         const prezzo = PREZZI_OGGETTI[nome] || 25;
-        // Peso inversamente proporzionale all'interno del gruppo
         const peso = Math.max(1, Math.round(1000 / prezzo));
         for (let p = 0; p < peso; p++) {
             pool.push(nome);
@@ -274,7 +282,6 @@ function estraiDaListaPonderata(listaNomi) {
 }
 
 function estraiSingoloStrumento(dungeonNome, isShop = false) {
-    // Step 1: Scelta della Categoria (40% Lanciabile, 35% Bacca, 25% Seme)
     const rollCat = Math.random();
     let categoriaScelta = "Lanciabile";
     if (rollCat < 0.40) {
@@ -287,7 +294,6 @@ function estraiSingoloStrumento(dungeonNome, isShop = false) {
 
     let nomeEstratto = "";
 
-    // Step 2: Estrazione ponderata dentro la singola categoria
     if (categoriaScelta === "Lanciabile") {
         let poolLanciabili = [];
         if (dungeonNome === "Sabbie Ardenti") {
@@ -306,7 +312,6 @@ function estraiSingoloStrumento(dungeonNome, isShop = false) {
     } else if (categoriaScelta === "Bacca") {
         nomeEstratto = estraiDaListaPonderata(LISTA_BACCHE);
     } else {
-        // Semi (I semi rari competono solo con gli altri semi, non con i lanciabili)
         nomeEstratto = estraiDaListaPonderata(LISTA_SEMI);
     }
 
