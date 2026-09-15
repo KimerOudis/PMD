@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <title>Generatore Dungeon PMD</title>
+  <title>Generatore Dungeon PMD - Configurazione Completa</title>
   <style>
     :root {
       --bg-color: #1e1e24;
@@ -10,6 +10,7 @@
       --card-border: #0f172a;
       --accent-red: #e3350d;
       --accent-red-hover: #b82708;
+      --accent-blue: #2563eb;
       --text-main: #0f172a;
     }
 
@@ -34,17 +35,34 @@
       text-shadow: 2px 2px 0px var(--card-border);
     }
 
-    .controls-panel {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
+    .settings-container {
+      width: 100%;
+      max-width: 1100px;
       background: var(--card-bg);
-      padding: 1rem;
-      border: 2px solid var(--card-border);
-      border-radius: 6px;
+      border: 3px solid var(--card-border);
+      border-radius: 8px;
+      padding: 1.2rem;
       margin-bottom: 1.5rem;
-      align-items: flex-end;
       color: var(--text-main);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+    }
+
+    .section-title {
+      font-size: 0.95rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      border-bottom: 2px solid var(--card-border);
+      padding-bottom: 4px;
+      margin: 10px 0 8px 0;
+      color: #334155;
+    }
+    .section-title:first-child { margin-top: 0; }
+
+    .grid-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+      margin-bottom: 8px;
     }
 
     .labeled-box {
@@ -53,21 +71,42 @@
     }
 
     .labeled-box label {
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       font-weight: bold;
       text-transform: uppercase;
       color: #475569;
-      margin-bottom: 4px;
+      margin-bottom: 3px;
     }
 
-    select, input {
-      padding: 0.55rem;
-      font-size: 0.95rem;
+    .checkbox-box {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 18px;
+      font-size: 0.85rem;
+      font-weight: bold;
+    }
+
+    .checkbox-box input { width: auto; }
+
+    select, input[type="number"], input[type="text"] {
+      padding: 0.45rem;
+      font-size: 0.9rem;
       border: 2px solid var(--card-border);
       border-radius: 4px;
       background: white;
       font-weight: bold;
       color: var(--text-main);
+      width: 100%;
+    }
+
+    .actions-bar {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 15px;
+      padding-top: 10px;
+      border-top: 2px solid var(--card-border);
     }
 
     .action-btn {
@@ -76,10 +115,10 @@
       border: 2px solid var(--card-border);
       border-radius: 4px;
       font-weight: bold;
-      font-size: 1rem;
+      font-size: 1.05rem;
       text-transform: uppercase;
       cursor: pointer;
-      padding: 0.6rem 1.4rem;
+      padding: 0.7rem 2rem;
       box-shadow: 0 3px 0 var(--card-border);
       transition: all 0.1s ease;
     }
@@ -117,37 +156,136 @@
 
   <h1>Generatore Layout Dungeon PMD</h1>
 
-  <div class="controls-panel">
-    <div class="labeled-box">
-      <label>Tileset</label>
-      <select id="select-tileset">
-        <option value="tilesets/tileset100_dpc.png">Tileset 100 (Neve / Ghiaccio)</option>
-        <option value="tilesets/tileset101_dpc.png" selected>Tileset 101 (Deserto / Tempio)</option>
-        <option value="tilesets/tileset102_dpc.png">Tileset 102 (Canyon Sabbioso)</option>
-        <option value="tilesets/tileset103_dpc.png">Tileset 103 (Caverna Rocciosa)</option>
-      </select>
+  <div class="settings-container">
+
+    <!-- 1. Stile Grafico e Layout -->
+    <div class="section-title">Struttura Generale</div>
+    <div class="grid-row">
+      <div class="labeled-box">
+        <label>Tileset</label>
+        <select id="p-tileset">
+          <option value="tilesets/tileset100_dpc.png">Tileset 100 (Neve / Ghiaccio)</option>
+          <option value="tilesets/tileset101_dpc.png" selected>Tileset 101 (Deserto / Tempio)</option>
+          <option value="tilesets/tileset102_dpc.png">Tileset 102 (Canyon Sabbioso)</option>
+          <option value="tilesets/tileset103_dpc.png">Tileset 103 (Caverna Rocciosa)</option>
+        </select>
+      </div>
+
+      <div class="labeled-box">
+        <label>Forma del Piano (Layout)</label>
+        <select id="p-layout">
+          <option value="0" selected>Large (Standard Grande)</option>
+          <option value="1">Small (Standard Piccolo)</option>
+          <option value="11">Medium (Standard Medio)</option>
+          <option value="2">One Room Monster House</option>
+          <option value="3">Outer Ring (Anello Esterno)</option>
+          <option value="4">Crossroads (Crocevia Incrociato)</option>
+          <option value="5">Two Rooms Monster House</option>
+          <option value="6">Line (Linea Orizzontale)</option>
+          <option value="7">Cross (Croce a 5 Stanze)</option>
+          <option value="8">Large 0x8</option>
+          <option value="9">Beetle (Scarabeo Colonna Centrale)</option>
+          <option value="10">Outer Rooms (Stanze Perimetrali)</option>
+        </select>
+      </div>
+
+      <div class="labeled-box">
+        <label>Densità Stanze (Room Density)</label>
+        <input type="number" id="p-room-density" value="4" min="1" max="15">
+      </div>
+
+      <div class="labeled-box">
+        <label>Connettività Corridoi</label>
+        <input type="number" id="p-floor-connectivity" value="15" min="1" max="50">
+      </div>
+
+      <div class="labeled-box">
+        <label>Corridoi Extra</label>
+        <input type="number" id="p-extra-hallways" value="0" min="0" max="30">
+      </div>
+
+      <div class="checkbox-box">
+        <input type="checkbox" id="p-allow-dead-ends">
+        <label for="p-allow-dead-ends">Permetti Vicoli Ciechi</label>
+      </div>
     </div>
 
-    <div class="labeled-box">
-      <label>Densità Stanze</label>
-      <select id="select-stanze">
-        <option value="3">Poche (3)</option>
-        <option value="4" selected>Medie (4)</option>
-        <option value="6">Molte (6)</option>
-        <option value="8">Dense (8)</option>
-      </select>
+    <!-- 2. Densità Entità e Spawns -->
+    <div class="section-title">Densità Spawns</div>
+    <div class="grid-row">
+      <div class="labeled-box">
+        <label>Densità Nemici</label>
+        <input type="number" id="p-enemy-density" value="8" min="0" max="30">
+      </div>
+
+      <div class="labeled-box">
+        <label>Densità Strumenti</label>
+        <input type="number" id="p-item-density" value="4" min="0" max="25">
+      </div>
+
+      <div class="labeled-box">
+        <label>Densità Strumenti Sepolti</label>
+        <input type="number" id="p-buried-item-density" value="0" min="0" max="25">
+      </div>
+
+      <div class="labeled-box">
+        <label>Densità Trappole</label>
+        <input type="number" id="p-trap-density" value="5" min="0" max="30">
+      </div>
     </div>
 
-    <div class="labeled-box">
-      <label>Connettività Corridoi</label>
-      <select id="select-connettivita">
-        <option value="10">Minima (10)</option>
-        <option value="18" selected>Standard (18)</option>
-        <option value="30">Complessa (30)</option>
-      </select>
+    <!-- 3. Eventi Speciali e Stanze Rare -->
+    <div class="section-title">Probabilità Eventi e Stanze Speciali (%)</div>
+    <div class="grid-row">
+      <div class="labeled-box">
+        <label>Shop Kecleon (%)</label>
+        <input type="number" id="p-kecleon-chance" value="0" min="0" max="100">
+      </div>
+
+      <div class="labeled-box">
+        <label>Tana / Monster House (%)</label>
+        <input type="number" id="p-monster-house-chance" value="0" min="0" max="100">
+      </div>
+
+      <div class="labeled-box">
+        <label>Tana Senza Strumenti (%)</label>
+        <input type="number" id="p-itemless-mh-chance" value="0" min="0" max="100">
+      </div>
+
+      <div class="labeled-box">
+        <label>Stanza Labirinto (%)</label>
+        <input type="number" id="p-maze-chance" value="0" min="0" max="100">
+      </div>
     </div>
 
-    <button id="btn-genera" class="action-btn">Genera Piano 🎲</button>
+    <!-- 4. Terreno Secondario (Acqua/Lava) e Strutture -->
+    <div class="section-title">Terreno Secondario & Modificatori Stanze</div>
+    <div class="grid-row">
+      <div class="labeled-box">
+        <label>Densità Terreno Sec. (Laghetti)</label>
+        <input type="number" id="p-secondary-density" value="10" min="0" max="30">
+      </div>
+
+      <div class="labeled-box">
+        <label>Budget Strutture Interne</label>
+        <input type="number" id="p-secondary-structures" value="0" min="0" max="10">
+      </div>
+
+      <div class="checkbox-box">
+        <input type="checkbox" id="p-flag-secondary" checked>
+        <label for="p-flag-secondary">Genera Fiumi / Laghi</label>
+      </div>
+
+      <div class="checkbox-box">
+        <input type="checkbox" id="p-flag-imperfections">
+        <label for="p-flag-imperfections">Imperfezioni Pareti</label>
+      </div>
+    </div>
+
+    <div class="actions-bar">
+      <button id="btn-genera" class="action-btn">Genera Dungeon con Parametri 🎲</button>
+    </div>
+
   </div>
 
   <div class="canvas-wrapper">
@@ -167,20 +305,58 @@
 
     const canvas = document.getElementById('dungeonCanvas');
     const btnGenera = document.getElementById('btn-genera');
-    const selectTileset = document.getElementById('select-tileset');
-    const selectStanze = document.getElementById('select-stanze');
-    const selectConnettivita = document.getElementById('select-connettivita');
+
+    // Mappatura input HTML
+    const pTileset = document.getElementById('p-tileset');
+    const pLayout = document.getElementById('p-layout');
+    const pRoomDensity = document.getElementById('p-room-density');
+    const pFloorConnectivity = document.getElementById('p-floor-connectivity');
+    const pExtraHallways = document.getElementById('p-extra-hallways');
+    const pAllowDeadEnds = document.getElementById('p-allow-dead-ends');
+
+    const pEnemyDensity = document.getElementById('p-enemy-density');
+    const pItemDensity = document.getElementById('p-item-density');
+    const pBuriedItemDensity = document.getElementById('p-buried-item-density');
+    const pTrapDensity = document.getElementById('p-trap-density');
+
+    const pKecleonChance = document.getElementById('p-kecleon-chance');
+    const pMonsterHouseChance = document.getElementById('p-monster-house-chance');
+    const pItemlessMhChance = document.getElementById('p-itemless-mh-chance');
+    const pMazeChance = document.getElementById('p-maze-chance');
+
+    const pSecondaryDensity = document.getElementById('p-secondary-density');
+    const pSecondaryStructures = document.getElementById('p-secondary-structures');
+    const pFlagSecondary = document.getElementById('p-flag-secondary');
+    const pFlagImperfections = document.getElementById('p-flag-imperfections');
 
     async function rigeneraDungeon() {
       btnGenera.disabled = true;
-      btnGenera.textContent = "Generazione...";
+      btnGenera.textContent = "Generazione in corso...";
 
       try {
-        const tilesetImg = await caricaTileset(selectTileset.value);
+        const tilesetImg = await caricaTileset(pTileset.value);
 
         const props = new FloorProperties();
-        props.room_density = parseInt(selectStanze.value) || 4;
-        props.floor_connectivity = parseInt(selectConnettivita.value) || 18;
+        props.layout = parseInt(pLayout.value);
+        props.room_density = parseInt(pRoomDensity.value);
+        props.floor_connectivity = parseInt(pFloorConnectivity.value);
+        props.num_extra_hallways = parseInt(pExtraHallways.value);
+        props.allow_dead_ends = pAllowDeadEnds.checked;
+
+        props.enemy_density = parseInt(pEnemyDensity.value);
+        props.item_density = parseInt(pItemDensity.value);
+        props.buried_item_density = parseInt(pBuriedItemDensity.value);
+        props.trap_density = parseInt(pTrapDensity.value);
+
+        props.kecleon_shop_chance = parseInt(pKecleonChance.value);
+        props.monster_house_chance = parseInt(pMonsterHouseChance.value);
+        props.itemless_monster_house_chance = parseInt(pItemlessMhChance.value);
+        props.maze_room_chance = parseInt(pMazeChance.value);
+
+        props.secondary_terrain_density = parseInt(pSecondaryDensity.value);
+        props.secondary_structures_budget = parseInt(pSecondaryStructures.value);
+        props.room_flags.f_secondary_terrain_generation = pFlagSecondary.checked;
+        props.room_flags.f_room_imperfections = pFlagImperfections.checked;
 
         const data = new Dungeon();
         const map = GenerateDungeon(props, data);
@@ -188,17 +364,17 @@
         drawDungeonOnCanvas(canvas, map, tilesetImg);
       } catch (err) {
         console.error(err);
-        alert("Errore nel caricamento del tileset o nella generazione!");
+        alert("Errore durante la generazione!");
       } finally {
         btnGenera.disabled = false;
-        btnGenera.textContent = "Genera Piano 🎲";
+        btnGenera.textContent = "Genera Dungeon con Parametri 🎲";
       }
     }
 
     btnGenera.addEventListener('click', rigeneraDungeon);
-    selectTileset.addEventListener('change', rigeneraDungeon);
+    pTileset.addEventListener('change', rigeneraDungeon);
 
-    // Avvia la prima generazione automatica al caricamento
+    // Prima generazione automatica
     rigeneraDungeon();
   </script>
 </body>
