@@ -1,0 +1,89 @@
+export const FloorLayout = {
+    LAYOUT_LARGE: 0,
+    LAYOUT_SMALL: 1,
+    LAYOUT_ONE_ROOM_MONSTER_HOUSE: 2,
+    LAYOUT_OUTER_RING: 3,
+    LAYOUT_CROSSROADS: 4,
+    LAYOUT_TWO_ROOMS_WITH_MONSTER_HOUSE: 5,
+    LAYOUT_LINE: 6,
+    LAYOUT_CROSS: 7,
+    LAYOUT_LARGE_0x8: 8,
+    LAYOUT_BEETLE: 9,
+    LAYOUT_OUTER_ROOMS: 10,
+    LAYOUT_MEDIUM: 11
+};
+
+export const TerrainType = {
+    TERRAIN_WALL: 0,
+    TERRAIN_NORMAL: 1,
+    TERRAIN_SECONDARY: 2,
+    TERRAIN_CHASM: 3
+};
+
+export const DungeonObjectiveType = {
+    OBJECTIVE_STORY: 0,
+    OBJECTIVE_NORMAL: 1,
+    OBJECTIVE_RESCUE: 2
+};
+
+export const MissionType = {
+    MISSION_RESCUE_CLIENT: 0,
+    MISSION_RESCUE_TARGET: 1,
+    MISSION_ESCORT_TO_TARGET: 2,
+    MISSION_EXPLORE_WITH_CLIENT: 3,
+    MISSION_PROSPECT_WITH_CLIENT: 4,
+    MISSION_GUIDE_CLIENT: 5,
+    MISSION_FIND_ITEM: 6,
+    MISSION_DELIVER_ITEM: 7,
+    MISSION_SEARCH_FOR_TARGET: 8,
+    MISSION_TAKE_ITEM_FROM_OUTLAW: 9,
+    MISSION_ARREST_OUTLAW: 10
+};
+
+export const MissionSubtypeOutlaw = {
+    MISSION_OUTLAW_MONSTER_HOUSE: 7
+};
+
+export const FloorSize = {
+    FLOOR_SIZE_LARGE: 0,
+    FLOOR_SIZE_SMALL: 1,
+    FLOOR_SIZE_MEDIUM: 2
+};
+
+export const HiddenStairsType = {
+    HIDDEN_STAIRS_NONE: 0
+};
+
+export const FloorType = {
+    FLOOR_TYPE_NORMAL: 0,
+    FLOOR_TYPE_FIXED: 1,
+    FLOOR_TYPE_RESCUE: 2
+};
+
+export const DirectionId = {
+    DIR_NONE: 4294967295,
+    DIR_DOWN: 0,
+    DIR_DOWN_RIGHT: 1,
+    DIR_RIGHT: 2,
+    DIR_UP_RIGHT: 3,
+    DIR_UP: 4,
+    DIR_UP_LEFT: 5,
+    DIR_LEFT: 6,
+    DIR_DOWN_LEFT: 7
+};
+
+export const CardinalDirection = {
+    DIR_RIGHT: 0,
+    DIR_UP: 1,
+    DIR_LEFT: 2,
+    DIR_DOWN: 3
+};
+
+export const SecondaryStructureType = {
+    SECONDARY_STRUCTURE_NONE: 0,
+    SECONDARY_STRUCTURE_MAZE_PLUS_DOT: 1,
+    SECONDARY_STRUCTURE_CHECKERBOARD: 2,
+    SECONDARY_STRUCTURE_POOL: 3,
+    SECONDARY_STRUCTURE_ISLAND: 4,
+    SECONDARY_STRUCTURE_DIVIDER: 5
+};

@@ -15,6 +15,7 @@
       --accent-amber: #d97706;
       --accent-green: #15803d;
       --accent-purple: #7e22ce;
+      --accent-cyan: #06b6d4;
       --text-main: #f8fafc;
       --text-muted: #cbd5e1;
     }
@@ -103,6 +104,7 @@
     .card-shop::before { background: var(--accent-green); }
     .card-tutor::before { background: var(--accent-blue); }
     .card-quest::before { background: var(--accent-purple); }
+    .card-dungeon::before { background: var(--accent-cyan); }
 
     .card-icon {
       font-size: 2.5rem;
@@ -208,6 +210,16 @@
           <p class="card-desc">Genera richieste di soccorso, scorte, recupero strumenti e taglie per la bacheca della gilda.</p>
         </div>
         <span class="card-badge">Incarichi Gilda</span>
+      </a>
+
+      <!-- 6. Generatore Dungeon (Mappe procedurali) -->
+      <a href="./Generatore%20Dungeon/index.html" class="tool-card card-dungeon">
+        <div>
+          <div class="card-icon">🗺️</div>
+          <h2 class="card-title">Mappa Dungeon</h2>
+          <p class="card-desc">Generatore procedurale di interi piani in stile PMD Explorers con rendering grafico su tileset, stanze, corridoi e marker.</p>
+        </div>
+        <span class="card-badge">Layout Procedurale</span>
       </a>
 
     </div>

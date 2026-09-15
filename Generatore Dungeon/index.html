@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Generatore Dungeon PMD</title>
+  <style>
+    :root {
+      --bg-color: #1e1e24;
+      --card-bg: #e2e8f0;
+      --card-border: #0f172a;
+      --accent-red: #e3350d;
+      --accent-red-hover: #b82708;
+      --text-main: #0f172a;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      background: var(--bg-color);
+      color: #f8fafc;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      margin: 0 0 1rem 0;
+      font-size: 1.8rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      text-shadow: 2px 2px 0px var(--card-border);
+    }
+
+    .controls-panel {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      background: var(--card-bg);
+      padding: 1rem;
+      border: 2px solid var(--card-border);
+      border-radius: 6px;
+      margin-bottom: 1.5rem;
+      align-items: flex-end;
+      color: var(--text-main);
+    }
+
+    .labeled-box {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .labeled-box label {
+      font-size: 0.75rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      color: #475569;
+      margin-bottom: 4px;
+    }
+
+    select, input {
+      padding: 0.55rem;
+      font-size: 0.95rem;
+      border: 2px solid var(--card-border);
+      border-radius: 4px;
+      background: white;
+      font-weight: bold;
+      color: var(--text-main);
+    }
+
+    .action-btn {
+      background: var(--accent-red);
+      color: white;
+      border: 2px solid var(--card-border);
+      border-radius: 4px;
+      font-weight: bold;
+      font-size: 1rem;
+      text-transform: uppercase;
+      cursor: pointer;
+      padding: 0.6rem 1.4rem;
+      box-shadow: 0 3px 0 var(--card-border);
+      transition: all 0.1s ease;
+    }
+
+    .action-btn:hover { background: var(--accent-red-hover); }
+    .action-btn:active { transform: translateY(2px); box-shadow: none; }
+
+    .canvas-wrapper {
+      max-width: 95vw;
+      overflow: auto;
+      border: 3px solid var(--card-border);
+      border-radius: 6px;
+      background: #000;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+    }
+
+    canvas {
+      display: block;
+      image-rendering: pixelated;
+    }
+
+    .legend {
+      display: flex;
+      gap: 15px;
+      margin-top: 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    .legend-item { display: flex; align-items: center; gap: 6px; }
+    .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+    .dot-square { width: 12px; height: 12px; display: inline-block; }
+  </style>
+</head>
+<body>
+
+  <h1>Generatore Layout Dungeon PMD</h1>
+
+  <div class="controls-panel">
+    <div class="labeled-box">
+      <label>Tileset</label>
+      <select id="select-tileset">
+        <option value="tilesets/tileset100_dpc.png">Tileset 100 (Neve / Ghiaccio)</option>
+        <option value="tilesets/tileset101_dpc.png" selected>Tileset 101 (Deserto / Tempio)</option>
+        <option value="tilesets/tileset102_dpc.png">Tileset 102 (Canyon Sabbioso)</option>
+        <option value="tilesets/tileset103_dpc.png">Tileset 103 (Caverna Rocciosa)</option>
+      </select>
+    </div>
+
+    <div class="labeled-box">
+      <label>Densità Stanze</label>
+      <select id="select-stanze">
+        <option value="3">Poche (3)</option>
+        <option value="4" selected>Medie (4)</option>
+        <option value="6">Molte (6)</option>
+        <option value="8">Dense (8)</option>
+      </select>
+    </div>
+
+    <div class="labeled-box">
+      <label>Connettività Corridoi</label>
+      <select id="select-connettivita">
+        <option value="10">Minima (10)</option>
+        <option value="18" selected>Standard (18)</option>
+        <option value="30">Complessa (30)</option>
+      </select>
+    </div>
+
+    <button id="btn-genera" class="action-btn">Genera Piano 🎲</button>
+  </div>
+
+  <div class="canvas-wrapper">
+    <canvas id="dungeonCanvas"></canvas>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><span class="dot-square" style="background: #facc15;"></span> Scale</div>
+    <div class="legend-item"><span class="dot" style="background: #38bdf8;"></span> Strumento</div>
+    <div class="legend-item"><span class="dot" style="background: #ef4444;"></span> Nemico</div>
+  </div>
+
+  <script type="module">
+    import { GenerateDungeon } from './dungeon_engine/dungeon.js';
+    import { FloorProperties, Dungeon } from './dungeon_engine/key_types.js';
+    import { caricaTileset, drawDungeonOnCanvas } from './render_dungeon.js';
+
+    const canvas = document.getElementById('dungeonCanvas');
+    const btnGenera = document.getElementById('btn-genera');
+    const selectTileset = document.getElementById('select-tileset');
+    const selectStanze = document.getElementById('select-stanze');
+    const selectConnettivita = document.getElementById('select-connettivita');
+
+    async function rigeneraDungeon() {
+      btnGenera.disabled = true;
+      btnGenera.textContent = "Generazione...";
+
+      try {
+        const tilesetImg = await caricaTileset(selectTileset.value);
+
+        const props = new FloorProperties();
+        props.room_density = parseInt(selectStanze.value) || 4;
+        props.floor_connectivity = parseInt(selectConnettivita.value) || 18;
+
+        const data = new Dungeon();
+        const map = GenerateDungeon(props, data);
+
+        drawDungeonOnCanvas(canvas, map, tilesetImg);
+      } catch (err) {
+        console.error(err);
+        alert("Errore nel caricamento del tileset o nella generazione!");
+      } finally {
+        btnGenera.disabled = false;
+        btnGenera.textContent = "Genera Piano 🎲";
+      }
+    }
+
+    btnGenera.addEventListener('click', rigeneraDungeon);
+    selectTileset.addEventListener('change', rigeneraDungeon);
+
+    // Avvia la prima generazione automatica al caricamento
+    rigeneraDungeon();
+  </script>
+</body>
+</html>
