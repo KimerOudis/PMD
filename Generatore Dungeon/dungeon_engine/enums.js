@@ -87,3 +87,9 @@ export const SecondaryStructureType = {
     SECONDARY_STRUCTURE_ISLAND: 4,
     SECONDARY_STRUCTURE_DIVIDER: 5
 };
+
+export const SecondaryTerrainType = {
+    SECONDARY_TERRAIN_WATER: 0,
+    SECONDARY_TERRAIN_LAVA: 1,
+    SECONDARY_TERRAIN_CHASM: 2
+};
